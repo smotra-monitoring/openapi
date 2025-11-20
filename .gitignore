@@ -1,0 +1,47 @@
+# Go build artifacts
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+
+# Dependency directories
+vendor/
+
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs and temp files
+*.log
+*.tmp
+tmp/
+
+# Docker
+*.env
+docker-compose.override.yml
+docker-compose.local.yml
+docker-compose.*.yml
+.docker/
+
+# Database
+*.db
+*.sqlite
+pgdata/
+
+# Node/Web assets
+node_modules/
+dist/
+build/
+
+# OpenAPI generated code
+gen/
+generated/
+
+# OS-specific
+.DS_Store
+Thumbs.db

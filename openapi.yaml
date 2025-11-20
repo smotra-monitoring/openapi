@@ -1,0 +1,1452 @@
+openapi: 3.0.3
+info:
+  title: Distributed Monitoring System API
+  description: |
+    API for a distributed monitoring system that tracks reachability and performance 
+    of agents installed on various hosts. This system provides real-time monitoring, 
+    alerting, and reporting capabilities.
+    
+    ## Authentication
+    All endpoints require Bearer token authentication unless otherwise specified.
+    
+    ## Rate Limiting
+    - Agent endpoints: 1000 requests per minute per agent
+    - User endpoints: 100 requests per minute per user
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+  license:
+    name: Source Available License
+    url: https://github.com/yourorg/monitoring-system/blob/main/LICENSE
+
+servers:
+  - url: https://api.smotra.net/api/v1
+    description: Production server
+  - url: https://staging-api.smotra.net/api/v1
+    description: Staging server
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+
+tags:
+  - name: agent
+    description: Agent-related operations (data submission, configuration)
+  - name: result
+    description: Result and metrics retrieval operations
+  - name: configuration
+    description: Agent configuration management
+  - name: alerts
+    description: Alert management and notification settings
+  - name: authentication
+    description: User authentication and authorization
+  - name: health
+    description: System health and monitoring endpoints
+
+security:
+  - BearerAuth: []
+
+paths:
+  # ============================================
+  # AGENT ENDPOINTS
+  # ============================================
+  
+  /agent/report:
+    post:
+      tags:
+        - agent
+      summary: Submit agent monitoring report
+      description: |
+        Agents use this endpoint to submit collected monitoring data including 
+        reachability checks, performance metrics, and system health information.
+        
+        This endpoint supports batch submissions for efficiency when agents are 
+        recovering from offline periods.
+      operationId: submitAgentReport
+      security:
+        - BearerAuth: []
+        - AgentApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentReport'
+            examples:
+              singleCheck:
+                summary: Single reachability check
+                value:
+                  agent_id: "agent-001"
+                  hostname: "web-server-01"
+                  timestamp: "2025-11-19T10:30:00Z"
+                  metrics:
+                    - type: "icmp_ping"
+                      target: "192.168.1.100"
+                      status: "reachable"
+                      response_time_ms: 12.5
+                      packet_loss_percent: 0
+                    - type: "http_check"
+                      target: "https://api.example.com/health"
+                      status: "reachable"
+                      response_time_ms: 145.3
+                      status_code: 200
+              batchSubmission:
+                summary: Batch submission after reconnection
+                value:
+                  agent_id: "agent-002"
+                  hostname: "db-server-01"
+                  reports:
+                    - timestamp: "2025-11-19T10:25:00Z"
+                      metrics:
+                        - type: "icmp_ping"
+                          target: "192.168.1.50"
+                          status: "unreachable"
+                          response_time_ms: null
+                          packet_loss_percent: 100
+                    - timestamp: "2025-11-19T10:30:00Z"
+                      metrics:
+                        - type: "icmp_ping"
+                          target: "192.168.1.50"
+                          status: "reachable"
+                          response_time_ms: 8.2
+                          packet_loss_percent: 0
+      responses:
+        '202':
+          description: Report accepted for processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportAcknowledgment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /agent/register:
+    post:
+      tags:
+        - agent
+      summary: Register a new agent
+      description: Register a new agent with the monitoring system
+      operationId: registerAgent
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentRegistration'
+      responses:
+        '201':
+          description: Agent registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCredentials'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Agent already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /agent/{agentId}/configuration:
+    get:
+      tags:
+        - agent
+        - configuration
+      summary: Get agent configuration
+      description: Retrieve current configuration for a specific agent
+      operationId: getAgentConfiguration
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+        - name: version
+          in: query
+          description: Configuration version (returns latest if not specified)
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Configuration retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentConfiguration'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - agent
+        - configuration
+      summary: Update agent configuration
+      description: Update configuration for a specific agent
+      operationId: updateAgentConfiguration
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentConfiguration'
+      responses:
+        '200':
+          description: Configuration updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentConfiguration'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /agent/{agentId}/heartbeat:
+    post:
+      tags:
+        - agent
+      summary: Send agent heartbeat
+      description: Lightweight endpoint for agents to signal they are alive
+      operationId: sendAgentHeartbeat
+      security:
+        - AgentApiKey: []
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentHeartbeat'
+      responses:
+        '204':
+          description: Heartbeat received
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ============================================
+  # RESULT ENDPOINTS
+  # ============================================
+
+  /result/report:
+    get:
+      tags:
+        - result
+      summary: Get monitoring results report
+      description: |
+        Retrieve aggregated monitoring results and metrics based on filters.
+        Supports various aggregation intervals and metric types.
+      operationId: getResultReport
+      parameters:
+        - name: agent_id
+          in: query
+          description: Filter by specific agent(s)
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+        - name: target
+          in: query
+          description: Filter by monitored target
+          schema:
+            type: string
+        - name: metric_type
+          in: query
+          description: Type of metric to retrieve
+          schema:
+            type: string
+            enum: [icmp_ping, tcp_check, http_check, traceroute, custom]
+        - name: start_time
+          in: query
+          required: true
+          description: Start of time range (RFC3339 format)
+          schema:
+            type: string
+            format: date-time
+        - name: end_time
+          in: query
+          required: true
+          description: End of time range (RFC3339 format)
+          schema:
+            type: string
+            format: date-time
+        - name: aggregation
+          in: query
+          description: Aggregation interval
+          schema:
+            type: string
+            enum: [1m, 5m, 15m, 1h, 6h, 1d]
+            default: 5m
+        - name: status
+          in: query
+          description: Filter by status
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [reachable, unreachable, degraded, unknown]
+          style: form
+          explode: true
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          description: Number of results per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+      responses:
+        '200':
+          description: Report generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultReport'
+            text/csv:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /result/metrics:
+    get:
+      tags:
+        - result
+      summary: Get raw metrics data
+      description: Retrieve raw, unaggregated metrics data points
+      operationId: getMetrics
+      parameters:
+        - name: agent_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: start_time
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: end_time
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: metric_type
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
+
+  /result/summary:
+    get:
+      tags:
+        - result
+      summary: Get summary statistics
+      description: Get high-level summary statistics for the monitoring system
+      operationId: getSummary
+      parameters:
+        - name: time_range
+          in: query
+          schema:
+            type: string
+            enum: [1h, 24h, 7d, 30d]
+            default: 24h
+      responses:
+        '200':
+          description: Summary statistics retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SummaryStatistics'
+
+  # ============================================
+  # ALERT ENDPOINTS
+  # ============================================
+
+  /alerts:
+    get:
+      tags:
+        - alerts
+      summary: List all alerts
+      description: Retrieve list of configured alerts
+      operationId: listAlerts
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, acknowledged, resolved]
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [critical, warning, info]
+      responses:
+        '200':
+          description: Alerts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alerts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Alert'
+
+    post:
+      tags:
+        - alerts
+      summary: Create new alert rule
+      description: Create a new alert rule configuration
+      operationId: createAlert
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertRule'
+      responses:
+        '201':
+          description: Alert rule created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertRule'
+
+  /alerts/{alertId}:
+    get:
+      tags:
+        - alerts
+      summary: Get alert details
+      operationId: getAlert
+      parameters:
+        - $ref: '#/components/parameters/AlertId'
+      responses:
+        '200':
+          description: Alert details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alert'
+
+    delete:
+      tags:
+        - alerts
+      summary: Delete alert rule
+      operationId: deleteAlert
+      parameters:
+        - $ref: '#/components/parameters/AlertId'
+      responses:
+        '204':
+          description: Alert rule deleted
+
+  /alerts/{alertId}/acknowledge:
+    post:
+      tags:
+        - alerts
+      summary: Acknowledge an alert
+      operationId: acknowledgeAlert
+      parameters:
+        - $ref: '#/components/parameters/AlertId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                acknowledged_by:
+                  type: string
+                note:
+                  type: string
+      responses:
+        '200':
+          description: Alert acknowledged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alert'
+
+  # ============================================
+  # AUTHENTICATION ENDPOINTS
+  # ============================================
+
+  /auth/login:
+    post:
+      tags:
+        - authentication
+      summary: User login
+      description: Authenticate user and receive access token
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/refresh:
+    post:
+      tags:
+        - authentication
+      summary: Refresh access token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refresh_token
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+
+  /auth/logout:
+    post:
+      tags:
+        - authentication
+      summary: User logout
+      operationId: logout
+      responses:
+        '204':
+          description: Logout successful
+
+  # ============================================
+  # HEALTH & MONITORING ENDPOINTS
+  # ============================================
+
+  /healthz:
+    get:
+      tags:
+        - health
+      summary: Health check endpoint
+      description: Check if the server is healthy and operational
+      operationId: healthCheck
+      security: []
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        '503':
+          description: Server is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+  /metrics:
+    get:
+      tags:
+        - health
+      summary: Prometheus metrics endpoint
+      description: Expose metrics in Prometheus format
+      operationId: prometheusMetrics
+      security: []
+      responses:
+        '200':
+          description: Metrics in Prometheus format
+          content:
+            text/plain:
+              schema:
+                type: string
+
+# ============================================
+# COMPONENTS
+# ============================================
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for user authentication
+    
+    AgentApiKey:
+      type: apiKey
+      in: header
+      name: X-Agent-API-Key
+      description: API key for agent authentication
+
+  parameters:
+    AgentId:
+      name: agentId
+      in: path
+      required: true
+      description: Unique identifier for the agent
+      schema:
+        type: string
+        pattern: '^agent-[a-zA-Z0-9-]+$'
+    
+    AlertId:
+      name: alertId
+      in: path
+      required: true
+      description: Unique identifier for the alert
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    # ============================================
+    # AGENT SCHEMAS
+    # ============================================
+    
+    AgentReport:
+      type: object
+      required:
+        - agent_id
+        - hostname
+        - timestamp
+        - metrics
+      properties:
+        agent_id:
+          type: string
+          description: Unique identifier for the agent
+          example: "agent-001"
+        hostname:
+          type: string
+          description: Hostname of the machine running the agent
+          example: "web-server-01"
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the report was generated (RFC3339)
+          example: "2025-11-19T10:30:00Z"
+        metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Metric'
+          minItems: 1
+        agent_version:
+          type: string
+          description: Version of the agent software
+          example: "1.2.3"
+        reports:
+          type: array
+          description: Batch submission of multiple reports (optional)
+          items:
+            type: object
+            required:
+              - timestamp
+              - metrics
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+              metrics:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Metric'
+
+    Metric:
+      type: object
+      required:
+        - type
+        - target
+        - status
+      properties:
+        type:
+          type: string
+          enum: [icmp_ping, tcp_check, http_check, traceroute, custom]
+          description: Type of check performed
+        target:
+          type: string
+          description: Target host, IP, or URL
+          example: "192.168.1.100"
+        status:
+          type: string
+          enum: [reachable, unreachable, degraded, unknown]
+          description: Status of the check
+        response_time_ms:
+          type: number
+          format: float
+          nullable: true
+          description: Response time in milliseconds
+          example: 12.5
+        packet_loss_percent:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          nullable: true
+          description: Packet loss percentage for ping checks
+        status_code:
+          type: integer
+          nullable: true
+          description: HTTP status code for HTTP checks
+        error_message:
+          type: string
+          nullable: true
+          description: Error message if check failed
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Additional metric-specific data
+
+    AgentRegistration:
+      type: object
+      required:
+        - hostname
+        - ip_address
+      properties:
+        hostname:
+          type: string
+          example: "web-server-01"
+        ip_address:
+          type: string
+          format: ipv4
+          example: "192.168.1.100"
+        agent_version:
+          type: string
+          example: "1.2.3"
+        os:
+          type: string
+          example: "linux"
+        arch:
+          type: string
+          example: "x86_64"
+        tags:
+          type: object
+          additionalProperties:
+            type: string
+          description: Custom tags for organizing agents
+
+    AgentCredentials:
+      type: object
+      required:
+        - agent_id
+        - api_key
+      properties:
+        agent_id:
+          type: string
+          example: "agent-001"
+        api_key:
+          type: string
+          description: API key for agent authentication
+          example: "ak_1234567890abcdef"
+        configuration_url:
+          type: string
+          format: uri
+          example: "https://api.smotra.net/api/v1/agent/agent-001/configuration"
+
+    AgentConfiguration:
+      type: object
+      required:
+        - agent_id
+        - version
+      properties:
+        agent_id:
+          type: string
+        version:
+          type: integer
+          description: Configuration version number
+        monitoring_interval_seconds:
+          type: integer
+          minimum: 10
+          default: 60
+          description: Interval between monitoring checks
+        reporting_interval_seconds:
+          type: integer
+          minimum: 30
+          default: 300
+          description: Interval for sending reports to server
+        targets:
+          type: array
+          items:
+            $ref: '#/components/schemas/MonitoringTarget'
+        plugins:
+          type: array
+          items:
+            $ref: '#/components/schemas/PluginConfiguration'
+        thresholds:
+          $ref: '#/components/schemas/Thresholds'
+        retry_policy:
+          $ref: '#/components/schemas/RetryPolicy'
+
+    MonitoringTarget:
+      type: object
+      required:
+        - id
+        - type
+        - address
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [icmp_ping, tcp_check, http_check, traceroute]
+        address:
+          type: string
+          description: IP address, hostname, or URL
+        port:
+          type: integer
+          minimum: 1
+          maximum: 65535
+        enabled:
+          type: boolean
+          default: true
+        custom_config:
+          type: object
+          additionalProperties: true
+
+    PluginConfiguration:
+      type: object
+      required:
+        - name
+        - enabled
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        enabled:
+          type: boolean
+        configuration:
+          type: object
+          additionalProperties: true
+
+    Thresholds:
+      type: object
+      properties:
+        response_time_warning_ms:
+          type: number
+          format: float
+          default: 100
+        response_time_critical_ms:
+          type: number
+          format: float
+          default: 500
+        packet_loss_warning_percent:
+          type: number
+          format: float
+          default: 10
+        packet_loss_critical_percent:
+          type: number
+          format: float
+          default: 50
+
+    RetryPolicy:
+      type: object
+      properties:
+        max_retries:
+          type: integer
+          minimum: 0
+          default: 3
+        retry_delay_seconds:
+          type: integer
+          minimum: 1
+          default: 5
+        backoff_multiplier:
+          type: number
+          format: float
+          minimum: 1
+          default: 2
+
+    AgentHeartbeat:
+      type: object
+      required:
+        - timestamp
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [healthy, degraded]
+          default: healthy
+        cpu_usage_percent:
+          type: number
+          format: float
+        memory_usage_mb:
+          type: number
+          format: float
+
+    ReportAcknowledgment:
+      type: object
+      required:
+        - request_id
+        - status
+        - received_at
+      properties:
+        request_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [accepted, queued]
+        received_at:
+          type: string
+          format: date-time
+        configuration_version:
+          type: integer
+          description: Latest configuration version available
+        update_available:
+          type: boolean
+          description: Whether agent update is available
+
+    # ============================================
+    # RESULT SCHEMAS
+    # ============================================
+
+    ResultReport:
+      type: object
+      required:
+        - time_range
+        - data
+        - pagination
+      properties:
+        time_range:
+          type: object
+          required:
+            - start
+            - end
+          properties:
+            start:
+              type: string
+              format: date-time
+            end:
+              type: string
+              format: date-time
+        aggregation:
+          type: string
+          example: "5m"
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AggregatedMetric'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        metadata:
+          type: object
+          properties:
+            total_checks:
+              type: integer
+            successful_checks:
+              type: integer
+            failed_checks:
+              type: integer
+            average_response_time_ms:
+              type: number
+              format: float
+
+    AggregatedMetric:
+      type: object
+      required:
+        - timestamp
+        - agent_id
+        - target
+        - metric_type
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        agent_id:
+          type: string
+        hostname:
+          type: string
+        target:
+          type: string
+        metric_type:
+          type: string
+        status:
+          type: string
+          enum: [reachable, unreachable, degraded, unknown]
+        avg_response_time_ms:
+          type: number
+          format: float
+        min_response_time_ms:
+          type: number
+          format: float
+        max_response_time_ms:
+          type: number
+          format: float
+        p50_response_time_ms:
+          type: number
+          format: float
+        p95_response_time_ms:
+          type: number
+          format: float
+        p99_response_time_ms:
+          type: number
+          format: float
+        success_rate_percent:
+          type: number
+          format: float
+        check_count:
+          type: integer
+
+    MetricsResponse:
+      type: object
+      required:
+        - metrics
+        - pagination
+      properties:
+        metrics:
+          type: array
+          items:
+            type: object
+            required:
+              - timestamp
+              - metric
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+              metric:
+                $ref: '#/components/schemas/Metric'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    SummaryStatistics:
+      type: object
+      properties:
+        time_range:
+          type: string
+          example: "24h"
+        total_agents:
+          type: integer
+        active_agents:
+          type: integer
+        inactive_agents:
+          type: integer
+        total_targets:
+          type: integer
+        reachable_targets:
+          type: integer
+        unreachable_targets:
+          type: integer
+        degraded_targets:
+          type: integer
+        total_checks:
+          type: integer
+        successful_checks:
+          type: integer
+        failed_checks:
+          type: integer
+        average_response_time_ms:
+          type: number
+          format: float
+        active_alerts:
+          type: integer
+        by_agent:
+          type: array
+          items:
+            type: object
+            properties:
+              agent_id:
+                type: string
+              hostname:
+                type: string
+              status:
+                type: string
+              checks_performed:
+                type: integer
+              success_rate_percent:
+                type: number
+
+    # ============================================
+    # ALERT SCHEMAS
+    # ============================================
+
+    Alert:
+      type: object
+      required:
+        - id
+        - rule_id
+        - status
+        - severity
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        rule_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [active, acknowledged, resolved]
+        severity:
+          type: string
+          enum: [critical, warning, info]
+        agent_id:
+          type: string
+        target:
+          type: string
+        metric_type:
+          type: string
+        threshold_value:
+          type: number
+        current_value:
+          type: number
+        created_at:
+          type: string
+          format: date-time
+        acknowledged_at:
+          type: string
+          format: date-time
+          nullable: true
+        acknowledged_by:
+          type: string
+          nullable: true
+        resolved_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    AlertRule:
+      type: object
+      required:
+        - name
+        - condition
+        - severity
+        - notifications
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          example: "High Response Time Alert"
+        description:
+          type: string
+        enabled:
+          type: boolean
+          default: true
+        condition:
+          $ref: '#/components/schemas/AlertCondition'
+        severity:
+          type: string
+          enum: [critical, warning, info]
+        notifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationChannel'
+        cooldown_seconds:
+          type: integer
+          minimum: 0
+          default: 300
+          description: Minimum time between repeat notifications
+
+    AlertCondition:
+      type: object
+      required:
+        - metric
+        - operator
+        - threshold
+      properties:
+        metric:
+          type: string
+          enum: [response_time_ms, packet_loss_percent, status, uptime_percent]
+        operator:
+          type: string
+          enum: [greater_than, less_than, equals, not_equals]
+        threshold:
+          type: number
+        duration_seconds:
+          type: integer
+          minimum: 0
+          description: Condition must be true for this duration before alerting
+        aggregation:
+          type: string
+          enum: [avg, min, max, sum, count]
+          default: avg
+        filters:
+          type: object
+          properties:
+            agent_ids:
+              type: array
+              items:
+                type: string
+            targets:
+              type: array
+              items:
+                type: string
+            metric_types:
+              type: array
+              items:
+                type: string
+
+    NotificationChannel:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [discord, email, webhook, slack]
+        configuration:
+          type: object
+          additionalProperties: true
+          description: Channel-specific configuration
+
+    # ============================================
+    # AUTHENTICATION SCHEMAS
+    # ============================================
+
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: "admin"
+        password:
+          type: string
+          format: password
+          example: "secure_password_123"
+
+    LoginResponse:
+      type: object
+      required:
+        - access_token
+        - token_type
+        - expires_in
+      properties:
+        access_token:
+          type: string
+          description: JWT access token
+        refresh_token:
+          type: string
+          description: Refresh token for obtaining new access tokens
+        token_type:
+          type: string
+          example: "Bearer"
+        expires_in:
+          type: integer
+          description: Token expiration time in seconds
+          example: 3600
+
+    # ============================================
+    # HEALTH SCHEMAS
+    # ============================================
+
+    HealthStatus:
+      type: object
+      required:
+        - status
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        timestamp:
+          type: string
+          format: date-time
+        version:
+          type: string
+          example: "1.0.0"
+        components:
+          type: object
+          additionalProperties:
+            type: object
+            required:
+              - status
+            properties:
+              status:
+                type: string
+                enum: [healthy, degraded, unhealthy]
+              message:
+                type: string
+          example:
+            database:
+              status: "healthy"
+            redis:
+              status: "healthy"
+            agents:
+              status: "healthy"
+              message: "42 agents connected"
+
+    # ============================================
+    # COMMON SCHEMAS
+    # ============================================
+
+    Pagination:
+      type: object
+      required:
+        - page
+        - page_size
+        - total_items
+        - total_pages
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        page_size:
+          type: integer
+          minimum: 1
+        total_items:
+          type: integer
+        total_pages:
+          type: integer
+        has_next:
+          type: boolean
+        has_previous:
+          type: boolean
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          example: "validation_error"
+        message:
+          type: string
+          example: "Invalid request parameters"
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              issue:
+                type: string
+        request_id:
+          type: string
+          format: uuid
+
+  # ============================================
+  # COMMON RESPONSES
+  # ============================================
+
+  responses:
+    BadRequest:
+      description: Bad request - Invalid parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "bad_request"
+            message: "Invalid request parameters"
+            request_id: "550e8400-e29b-41d4-a716-446655440000"
+
+    Unauthorized:
+      description: Unauthorized - Invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "unauthorized"
+            message: "Invalid or missing authentication token"
+            request_id: "550e8400-e29b-41d4-a716-446655440000"
+
+    Forbidden:
+      description: Forbidden - Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "forbidden"
+            message: "Insufficient permissions to access this resource"
+            request_id: "550e8400-e29b-41d4-a716-446655440000"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "not_found"
+            message: "The requested resource was not found"
+            request_id: "550e8400-e29b-41d4-a716-446655440000"
+
+    RateLimitExceeded:
+      description: Rate limit exceeded
+      headers:
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+          description: Request limit per time window
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+          description: Requests remaining in current window
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+          description: Unix timestamp when the rate limit resets
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "rate_limit_exceeded"
+            message: "Too many requests. Please try again later."
+            request_id: "550e8400-e29b-41d4-a716-446655440000"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "internal_server_error"
+            message: "An unexpected error occurred"
+            request_id: "550e8400-e29b-41d4-a716-446655440000"
