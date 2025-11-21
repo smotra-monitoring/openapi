@@ -38,7 +38,7 @@ info:
     email: support@example.com
   license:
     name: Source Available License
-    url: https://github.com/yourorg/monitoring-system/blob/main/LICENSE
+    url: https://github.com/smotra-monitoring/monitoring-system/blob/main/LICENSE
 
 servers:
   - url: https://api.smotra.net/api/v1
