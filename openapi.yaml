@@ -100,29 +100,19 @@ paths:
             examples:
               singleCheck:
                 summary: Single reachability check
-                value:
-                  agent_id: "agent-001"
-                  hostname: "web-server-01"
-                  timestamp: "2025-11-19T10:30:00Z"
-                  metrics:
-                    - type: "icmp_ping"
-                      target: "192.168.1.100"
-                      status: "reachable"
-                      response_time_ms: 12.5
-                      packet_loss_percent: 0
-              batchSubmission:
-                summary: Batch submission after reconnection
-                value:
-                  agent_id: "agent-002"
-                  hostname: "db-server-01"
-                  reports:
-                    - timestamp: "2025-11-19T10:25:00Z"
-                      metrics:
-                        - type: "icmp_ping"
-                          target: "192.168.1.50"
-                          status: "unreachable"
-                          response_time_ms: null
-                          packet_loss_percent: 100
+                value: {
+                  "agent_id":"e65ed2cc-6581-44dd-aa3b-6445b2ed8b25",
+                  "cached_reports":0,
+                  "checks_failed":0,
+                  "checks_performed":0,
+                  "checks_successful":0,
+                  "failed_report_count":0,
+                  "is_running":true,
+                  "last_report_at":null,
+                  "server_connected":false,
+                  "started_at":"2025-11-21T19:38:43.290410900Z",
+                  "stopped_at":null
+                }
       responses:
         '202':
           description: Report accepted for processing
