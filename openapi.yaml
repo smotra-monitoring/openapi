@@ -1286,7 +1286,7 @@ components:
     AgentApiKey:
       type: apiKey
       in: header
-      name: X-Agent-API-Key
+      name: Bearer
       description: |
         API key for agent authentication. Each agent receives a unique API key
         upon registration. This key should be kept secure and rotated periodically.
