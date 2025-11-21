@@ -72,6 +72,14 @@ security:
   - OAuth2AuthorizationCode: []
   - OAuth2ClientCredentials: []
 
+# ============================================
+# ============================================
+# ============================================
+# PATHS
+# ============================================
+# ============================================
+# ============================================
+
 paths:
   # ============================================
   # AGENT ENDPOINTS
@@ -1215,7 +1223,11 @@ paths:
                 monitoring_checks_total{status="failure"} 156
 
 # ============================================
+# ============================================
+# ============================================
 # COMPONENTS
+# ============================================
+# ============================================
 # ============================================
 
 components:
@@ -1279,6 +1291,12 @@ components:
         API key for agent authentication. Each agent receives a unique API key
         upon registration. This key should be kept secure and rotated periodically.
 
+  # ============================================
+  # ============================================
+  # PARAMETERS
+  # ============================================
+  # ============================================
+
   parameters:
     AgentId:
       name: agentId
@@ -1316,6 +1334,12 @@ components:
         type: string
         format: uuid
 
+  # ============================================
+  # ============================================
+  # SCHEMAS
+  # ============================================
+  # ============================================
+
   schemas:
     # ============================================
     # AGENT SCHEMAS
@@ -1324,7 +1348,6 @@ components:
     # ============================================
     # CHECKED 
     # ============================================
-
 
     AgentStatus:
       type: object
@@ -1633,6 +1656,25 @@ components:
           additionalProperties:
             type: string
 
+    AgentHeartbeat:
+      type: object
+      required:
+        - timestamp
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [healthy, degraded]
+          default: healthy
+        cpu_usage_percent:
+          type: number
+          format: float
+        memory_usage_mb:
+          type: number
+          format: float
+
     # ============================================
     # NOT CHECKED 
     # ============================================
@@ -1842,25 +1884,6 @@ components:
           format: float
           minimum: 1
           default: 2
-
-    AgentHeartbeat:
-      type: object
-      required:
-        - timestamp
-      properties:
-        timestamp:
-          type: string
-          format: date-time
-        status:
-          type: string
-          enum: [healthy, degraded]
-          default: healthy
-        cpu_usage_percent:
-          type: number
-          format: float
-        memory_usage_mb:
-          type: number
-          format: float
 
     ReportAcknowledgment:
       type: object
@@ -2588,7 +2611,9 @@ components:
           description: Link to relevant documentation
 
   # ============================================
+  # ============================================
   # COMMON RESPONSES
+  # ============================================
   # ============================================
 
   responses:
