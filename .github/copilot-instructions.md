@@ -47,6 +47,8 @@ Agent implementation should prioritize low resource usage to minimize impact on 
 - Implement data retention policies to manage storage usage effectively.
 - Support for horizontal scaling to handle increased load as the number of agents grows.
 - Server endpoints must be generated using OpenAPI/Swagger for easy integration and documentation.
+- Authentication should use JWT tokens for API access and session management for web interface.
+- User authentication should support OAuth2 for integration with existing identity providers.
 
 # Endpoints
 - RESTful API endpoints for agent data submission, configuration management, and data retrieval.
