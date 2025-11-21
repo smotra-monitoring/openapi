@@ -32,7 +32,7 @@ info:
     ## WebSocket API
     For real-time updates, see the AsyncAPI specification at `/docs/websocket-api.yaml`
     
-  version: 1.0.0
+  version: 0.0.1
   contact:
     name: API Support
     email: support@example.com
