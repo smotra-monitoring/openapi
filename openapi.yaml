@@ -1286,8 +1286,8 @@ components:
       required: true
       description: Unique identifier for the agent
       schema:
-        type: string
-        example: "agent-001"
+        type: uuid
+        example: "969915ca-5580-4d89-b791-03d89c0f90ac"
     
     AlertId:
       name: alertId
@@ -1390,7 +1390,6 @@ components:
           description: Number of reports cached locally on the agent
           example: 0
 
-    
     MonitoringResult:
       type: object
       required:
