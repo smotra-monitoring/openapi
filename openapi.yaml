@@ -1304,7 +1304,8 @@ components:
       required: true
       description: Unique identifier for the agent
       schema:
-        type: uuid
+        type: string
+        format: uuid
         example: "969915ca-5580-4d89-b791-03d89c0f90ac"
     
     AlertId:
