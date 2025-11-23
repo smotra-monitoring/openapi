@@ -1401,11 +1401,11 @@ components:
           format: date-time
           description: Timestamp of the last report received from the agent (RFC3339)
           example: "2025-11-21T12:00:00Z"
-        failed_repor_count:
+        failed_report_count:
           type: integer
           description: Number of consecutive failed report attempts
           example: 0
-        server)connected:
+        server_connected:
           type: boolean
           description: Whether the agent is currently connected to the server
           example: true
