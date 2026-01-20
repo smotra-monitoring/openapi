@@ -7,7 +7,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	assets "github.com/smotra-monitoring/openapi"
+	"github.com/smotra-monitoring/openapi/api"
+	"github.com/smotra-monitoring/openapi/web"
 )
 
 func main() {
@@ -22,14 +23,14 @@ func main() {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
-		w.Write(assets.IndexHTML)
+		w.Write(web.IndexHTML)
 	})
 
 	// Serve OpenAPI spec
 	r.Get("/openapi.yaml", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/yaml; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
-		w.Write(assets.OpenapiSpec)
+		w.Write(api.OpenapiSpec)
 	})
 
 	// Get port from environment or default to 8081
