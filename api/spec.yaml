@@ -1763,8 +1763,8 @@ components:
         - api_key
       properties:
         agent_id:
-          type: string
-          example: "agent-001"
+          $ref: '#/components/schemas/UUIDv7'
+          example: "019bdeb2-50dc-794e-808b-cf47526b867f"
         api_key:
           type: string
           description: API key for agent authentication
@@ -1772,7 +1772,7 @@ components:
         configuration_url:
           type: string
           format: uri
-          example: "https://api.smotra.net/api/v1/agent/agent-001/configuration"
+          example: "https://api.smotra.net/api/v1/agent/019bdeb2-50dc-794e-808b-cf47526b867f/configuration"
 
     AgentConfiguration:
       type: object
@@ -1781,7 +1781,8 @@ components:
         - version
       properties:
         agent_id:
-          type: string
+          $ref: '#/components/schemas/UUIDv7'
+          example: "019bdeb2-50dc-794e-808b-cf47526b867f"
         version:
           type: integer
           description: Configuration version number
@@ -1815,7 +1816,8 @@ components:
         - address
       properties:
         id:
-          type: string
+          $ref: '#/components/schemas/UUIDv7'
+          description: Unique identifier for the monitoring target
         address:
           type: string
           description: IP address, hostname, or URL
@@ -1894,8 +1896,7 @@ components:
         - received_at
       properties:
         request_id:
-          type: string
-          format: uuid
+          $ref: '#/components/schemas/UUIDv7'
         status:
           type: string
           enum: [accepted, queued]
@@ -1966,7 +1967,7 @@ components:
           type: string
           format: date-time
         agent_id:
-          type: string
+          $ref: '#/components/schemas/UUIDv7'
         hostname:
           type: string
         target:
@@ -2059,7 +2060,7 @@ components:
             type: object
             properties:
               agent_id:
-                type: string
+                $ref: '#/components/schemas/UUIDv7'
               hostname:
                 type: string
               status:
@@ -2068,6 +2069,7 @@ components:
                 type: integer
               success_rate_percent:
                 type: number
+                format: float
 
     # ============================================
     # ALERT SCHEMAS
@@ -2558,6 +2560,15 @@ components:
     # ============================================
     # COMMON SCHEMAS
     # ============================================
+
+    UUIDv7:
+      type: string
+      format: uuid
+      pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+      description: UUID version 7 as per RFC 4122
+      example: "0183f5e2-1dd2-7f8a-9abc-1234567890ab"
+      x-go-type: uuid.UUID
+      x-go-type-import: github.com/google/uuid
 
     Pagination:
       type: object
