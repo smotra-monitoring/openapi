@@ -1414,6 +1414,207 @@ components:
           description: Number of reports cached locally on the agent
           example: 0
 
+    AgentConfiguration:
+      type: object
+      required:
+        - version
+        - agent_id
+        - agent_name
+        - tags
+        - monitoring
+        - server
+        - storage
+        - endpoints
+      properties:
+        version:
+          type: integer
+          format: int32
+          description: Configuration version (used for syncing with server)
+          example: 1
+        agent_id:
+          $ref: '#/components/schemas/UUIDv7'
+          description: Unique identifier for this agent
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        agent_name:
+          type: string
+          description: Human-readable agent name
+          example: "Production Server 1"
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags for this agent (used for mesh organization)
+          example: ["production", "web-server", "us-east"]
+        monitoring:
+          $ref: '#/components/schemas/MonitoringConfiguration'
+        server:
+          $ref: '#/components/schemas/ServerConfiguration'
+        storage:
+          $ref: '#/components/schemas/StorageConfiguration'
+        endpoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/MonitoringEndpoint'
+          description: Endpoints to monitor
+
+    MonitoringConfiguration:
+      type: object
+      required:
+        - interval_secs
+        - timeout_secs
+        - ping_count
+        - max_concurrent
+        - traceroute_on_failure
+        - traceroute_max_hops
+      properties:
+        interval_secs:
+          type: integer
+          format: int64
+          description: Interval between checks in seconds
+          default: 60
+          minimum: 1
+          example: 60
+        timeout_secs:
+          type: integer
+          format: int64
+          description: Timeout for each check in seconds
+          default: 1
+          minimum: 1
+          example: 5
+        ping_count:
+          type: integer
+          format: int32
+          description: Number of pings to send per check
+          default: 3
+          minimum: 1
+          maximum: 100
+          example: 3
+        max_concurrent:
+          type: integer
+          description: Maximum number of concurrent checks
+          default: 10
+          minimum: 1
+          example: 10
+        traceroute_on_failure:
+          type: boolean
+          description: Enable traceroute on failed pings
+          default: false
+          example: false
+        traceroute_max_hops:
+          type: integer
+          format: int32
+          description: Maximum TTL for traceroute
+          default: 30
+          minimum: 1
+          maximum: 255
+          example: 30
+
+    ServerConfiguration:
+      type: object
+      required:
+        - report_interval_secs
+        - heartbeat_interval_secs
+        - verify_tls
+        - timeout_secs
+        - retry_attempts
+      properties:
+        url:
+          type: string
+          format: uri
+          description: Server URL
+          nullable: true
+          example: "https://api.smotra.net"
+        api_key:
+          type: string
+          description: API key for authentication
+          nullable: true
+          example: "sk_live_1234567890abcdef"
+        report_interval_secs:
+          type: integer
+          format: int64
+          description: Report interval in seconds
+          default: 300
+          minimum: 1
+          example: 300
+        heartbeat_interval_secs:
+          type: integer
+          format: int64
+          description: Heartbeat interval in seconds
+          default: 300
+          minimum: 1
+          example: 300
+        verify_tls:
+          type: boolean
+          description: Enable TLS verification
+          default: true
+          example: true
+        timeout_secs:
+          type: integer
+          format: int64
+          description: Connection timeout in seconds
+          default: 5
+          minimum: 1
+          example: 5
+        retry_attempts:
+          type: integer
+          format: int32
+          description: Retry attempts on failure
+          default: 3
+          minimum: 0
+          example: 3
+
+    StorageConfiguration:
+      type: object
+      required:
+        - cache_dir
+        - max_cached_results
+        - max_cache_age_secs
+      properties:
+        cache_dir:
+          type: string
+          description: Directory for storing cached data
+          default: "./cache"
+          example: "./cache"
+        max_cached_results:
+          type: integer
+          description: Maximum number of results to cache
+          default: 10000
+          minimum: 0
+          example: 10000
+        max_cache_age_secs:
+          type: integer
+          format: int64
+          description: Maximum age of cached results in seconds (e.g., 86400 = 24 hours)
+          default: 86400
+          minimum: 0
+          example: 86400
+
+    MonitoringEndpoint:
+      type: object
+      required:
+        - id
+        - address
+      properties:
+        id:
+          $ref: '#/components/schemas/UUIDv7'
+          description: Unique identifier for the monitoring target
+        address:
+          type: string
+          description: IP address, hostname, or URL
+        port:
+          type: integer
+          minimum: 1
+          maximum: 65535
+        enabled:
+          type: boolean
+          default: true
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags associated with the target
+          example: ["database", "critical"]
+
     MonitoringResult:
       type: object
       required:
@@ -1773,67 +1974,6 @@ components:
           type: string
           format: uri
           example: "https://api.smotra.net/api/v1/agent/019bdeb2-50dc-794e-808b-cf47526b867f/configuration"
-
-    AgentConfiguration:
-      type: object
-      required:
-        - agent_id
-        - version
-      properties:
-        agent_id:
-          $ref: '#/components/schemas/UUIDv7'
-          example: "019bdeb2-50dc-794e-808b-cf47526b867f"
-        version:
-          type: integer
-          description: Configuration version number
-        monitoring_interval_seconds:
-          type: integer
-          minimum: 10
-          default: 60
-          description: Interval between monitoring checks
-        reporting_interval_seconds:
-          type: integer
-          minimum: 30
-          default: 300
-          description: Interval for sending reports to server
-        targets:
-          type: array
-          items:
-            $ref: '#/components/schemas/MonitoringEndpoint'
-        plugins:
-          type: array
-          items:
-            $ref: '#/components/schemas/PluginConfiguration'
-        thresholds:
-          $ref: '#/components/schemas/Thresholds'
-        retry_policy:
-          $ref: '#/components/schemas/RetryPolicy'
-
-    MonitoringEndpoint:
-      type: object
-      required:
-        - id
-        - address
-      properties:
-        id:
-          $ref: '#/components/schemas/UUIDv7'
-          description: Unique identifier for the monitoring target
-        address:
-          type: string
-          description: IP address, hostname, or URL
-        port:
-          type: integer
-          minimum: 1
-          maximum: 65535
-        enabled:
-          type: boolean
-          default: true
-        tags:
-          type: array
-          items:
-            type: string
-          description: Tags associated with the target
-          example: ["database", "critical"]
 
     PluginConfiguration:
       type: object
