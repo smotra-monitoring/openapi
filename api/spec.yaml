@@ -199,7 +199,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AgentConfiguration'
+                $ref: '#/components/schemas/AgentConfig'
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -220,14 +220,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AgentConfiguration'
+              $ref: '#/components/schemas/AgentConfig'
       responses:
         '200':
           description: Configuration updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AgentConfiguration'
+                $ref: '#/components/schemas/AgentConfig'
         '400':
           $ref: '#/components/responses/BadRequest'
         '403':
@@ -1414,7 +1414,7 @@ components:
           description: Number of reports cached locally on the agent
           example: 0
 
-    AgentConfiguration:
+    AgentConfig:
       type: object
       required:
         - version
@@ -1446,18 +1446,18 @@ components:
           description: Tags for this agent (used for mesh organization)
           example: ["production", "web-server", "us-east"]
         monitoring:
-          $ref: '#/components/schemas/MonitoringConfiguration'
+          $ref: '#/components/schemas/MonitoringConfig'
         server:
-          $ref: '#/components/schemas/ServerConfiguration'
+          $ref: '#/components/schemas/ServerConfig'
         storage:
-          $ref: '#/components/schemas/StorageConfiguration'
+          $ref: '#/components/schemas/StorageConfig'
         endpoints:
           type: array
           items:
-            $ref: '#/components/schemas/MonitoringEndpoint'
+            $ref: '#/components/schemas/Endpoint'
           description: Endpoints to monitor
 
-    MonitoringConfiguration:
+    MonitoringConfig:
       type: object
       required:
         - interval_secs
@@ -1509,7 +1509,7 @@ components:
           maximum: 255
           example: 30
 
-    ServerConfiguration:
+    ServerConfig:
       type: object
       required:
         - report_interval_secs
@@ -1563,7 +1563,7 @@ components:
           minimum: 0
           example: 3
 
-    StorageConfiguration:
+    StorageConfig:
       type: object
       required:
         - cache_dir
@@ -1589,7 +1589,7 @@ components:
           minimum: 0
           example: 86400
 
-    MonitoringEndpoint:
+    Endpoint:
       type: object
       required:
         - id
@@ -1634,7 +1634,7 @@ components:
           example: "agent-001"
         target:
           description: Monitoring target information
-          $ref: '#/components/schemas/MonitoringEndpoint'
+          $ref: '#/components/schemas/Endpoint'
         check_type:
           $ref: '#/components/schemas/CheckType'
           description: Type of check performed
