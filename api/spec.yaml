@@ -67,6 +67,8 @@ tags:
     description: System health and monitoring endpoints
   - name: websocket
     description: WebSocket connection management
+  - name: current
+    description: -- Currently in development --
 
 security:
   - OAuth2AuthorizationCode: []
@@ -180,6 +182,7 @@ paths:
       tags:
         - agent
         - configuration
+        - current
       summary: Get agent configuration
       description: Retrieve current configuration for a specific agent
       operationId: getAgentConfiguration
@@ -1304,9 +1307,7 @@ components:
       required: true
       description: Unique identifier for the agent
       schema:
-        type: string
-        format: uuid
-        example: "969915ca-5580-4d89-b791-03d89c0f90ac"
+        $ref: '#/components/schemas/UUIDv7'
     
     AlertId:
       name: alertId
@@ -1434,7 +1435,7 @@ components:
         agent_id:
           $ref: '#/components/schemas/UUIDv7'
           description: Unique identifier for this agent
-          example: "550e8400-e29b-41d4-a716-446655440000"
+          example: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
         agent_name:
           type: string
           description: Human-readable agent name
@@ -2778,7 +2779,7 @@ components:
           example:
             error: "bad_request"
             message: "Invalid request parameters"
-            request_id: "550e8400-e29b-41d4-a716-446655440000"
+            request_id: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
 
     Unauthorized:
       description: Unauthorized - Invalid or missing authentication
@@ -2789,7 +2790,7 @@ components:
           example:
             error: "unauthorized"
             message: "Invalid or missing authentication token"
-            request_id: "550e8400-e29b-41d4-a716-446655440000"
+            request_id: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
 
     Forbidden:
       description: Forbidden - Insufficient permissions
@@ -2803,7 +2804,7 @@ components:
             details:
               - field: "scope"
                 issue: "Required scope 'admin' not present in token"
-            request_id: "550e8400-e29b-41d4-a716-446655440000"
+            request_id: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
 
     NotFound:
       description: Resource not found
@@ -2814,7 +2815,7 @@ components:
           example:
             error: "not_found"
             message: "The requested resource was not found"
-            request_id: "550e8400-e29b-41d4-a716-446655440000"
+            request_id: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
 
     RateLimitExceeded:
       description: Rate limit exceeded
@@ -2842,7 +2843,7 @@ components:
           example:
             error: "rate_limit_exceeded"
             message: "Too many requests. Please try again later."
-            request_id: "550e8400-e29b-41d4-a716-446655440000"
+            request_id: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
 
     InternalServerError:
       description: Internal server error
@@ -2853,4 +2854,4 @@ components:
           example:
             error: "internal_server_error"
             message: "An unexpected error occurred"
-            request_id: "550e8400-e29b-41d4-a716-446655440000"
+            request_id: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
