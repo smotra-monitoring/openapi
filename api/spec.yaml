@@ -2705,11 +2705,12 @@ components:
     UUIDv7:
       type: string
       format: uuid
-      pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
       description: UUID version 7 as per RFC 4122
       example: "0183f5e2-1dd2-7f8a-9abc-1234567890ab"
       x-go-type: uuid.UUID
-      x-go-type-import: github.com/google/uuid
+      x-go-type-import:
+        name: uuid
+        path: github.com/google/uuid
 
     Pagination:
       type: object
