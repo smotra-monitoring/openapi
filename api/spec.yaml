@@ -1421,7 +1421,6 @@ components:
         - version
         - agent_id
         - agent_name
-        - tags
         - monitoring
         - server
         - storage
