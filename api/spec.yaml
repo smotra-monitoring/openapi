@@ -1595,6 +1595,7 @@ components:
       required:
         - id
         - address
+        - enabled
       properties:
         id:
           $ref: '#/components/schemas/UUIDv7'
