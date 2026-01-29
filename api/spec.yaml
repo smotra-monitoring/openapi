@@ -207,6 +207,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '501':
+          $ref: '#/components/responses/NotImplemented'
         '503':
           $ref: '#/components/responses/InternalServerError'
 
@@ -241,6 +243,10 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        '503':
+          $ref: '#/components/responses/InternalServerError'
 
   /agent/{agentId}/heartbeat:
     post:
@@ -2859,4 +2865,15 @@ components:
           example:
             error: "internal_server_error"
             message: "An unexpected error occurred"
+            request_id: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
+
+    NotImplemented:
+      description: Not implemented
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "not_implemented"
+            message: "This feature is not yet implemented"
             request_id: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
