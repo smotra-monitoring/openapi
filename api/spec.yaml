@@ -191,11 +191,6 @@ paths:
         - OAuth2AuthorizationCode: [agent:read]
       parameters:
         - $ref: '#/components/parameters/AgentId'
-        - name: version
-          in: query
-          description: Configuration version (returns latest if not specified)
-          schema:
-            type: integer
       responses:
         '200':
           description: Configuration retrieved successfully
