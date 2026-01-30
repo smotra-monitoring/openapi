@@ -143,39 +143,197 @@ paths:
     post:
       tags:
         - agent
-      summary: Register a new agent
+        - current
+      summary: Agent self-registration (unclaimed)
       description: |
-        Register a new agent with the monitoring system. Requires appropriate 
-        permissions to register agents within the organization.
-      operationId: registerAgent
-      security:
-        - OAuth2AuthorizationCode: [agent:write]
-        - OAuth2ClientCredentials: [agent:write]
+        Agents use this endpoint to self-register when starting for the first time.
+        This creates an unclaimed agent record that must be claimed by a user 
+        before the agent can become operational.
+        
+        **Workflow:**
+        1. Agent generates its own UUIDv7 as agentId
+        2. Agent generates a random claim token (e.g., "ABC123XY")
+        3. Agent hashes token with SHA-256 and sends hash to server
+        4. Agent shows plain token in logs for user to copy
+        5. Server creates record in agent_claims table
+        6. Agent starts polling /agents/{agentId}/claim-status
+        7. User claims agent via web UI using agentId + plain claimToken
+        8. Server hashes user's input and validates against stored hash
+        9. Agent receives API key on next poll
+        
+        **Security:** Sending the hash instead of plain token provides defense in depth,
+        ensuring the claim token never travels over the network in plain text.
+        
+        This endpoint is idempotent - multiple calls from the same agentId 
+        will update the last_seen_at timestamp.
+      operationId: registerAgentSelf
+      security: []  # Unauthenticated
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AgentRegistration'
+              $ref: '#/components/schemas/AgentSelfRegistration'
+            example:
+              agentId: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
+              claimTokenHash: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+              hostname: "prod-server-01"
+              agentVersion: "1.0.0"
       responses:
         '201':
-          description: Agent registered successfully
+          description: Agent registration request created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AgentCredentials'
+                $ref: '#/components/schemas/AgentRegistrationResponse'
+              example:
+                status: "pending_claim"
+                pollUrl: "/agents/0197f96c-b278-7f64-a32f-dae3cabe1ff0/claim-status"
+                claimUrl: "https://yoursite.com/claim"
+                expiresAt: "2026-02-01T12:00:00Z"
+        '200':
+          description: Agent registration request updated (idempotent)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentRegistrationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /agents/{agentId}/claim-status:
+    get:
+      tags:
+        - agent
+        - current
+      summary: Check agent claim status (polling endpoint)
+      description: |
+        Agent polls this endpoint to check if it has been claimed by a user.
+        When claimed, this endpoint returns the API key that the agent should 
+        use for all future authenticated requests.
+        
+        **Agent Behavior:**
+        - Poll every 30-60 seconds while unclaimed
+        - Stop polling after receiving API key
+        - Store API key securely in configuration
+        
+        **Response States:**
+        - `pending_claim`: Still waiting for user to claim
+        - `claimed`: User has claimed, API key included (one-time delivery)
+        - `expired`: Claim token expired, agent must re-register
+      operationId: getAgentClaimStatus
+      security: []  # Unauthenticated
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+      responses:
+        '200':
+          description: Claim status retrieved
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ClaimStatusPending'
+                  - $ref: '#/components/schemas/ClaimStatusClaimed'
+              examples:
+                pending:
+                  summary: Agent not yet claimed
+                  value:
+                    status: "pending_claim"
+                    expiresAt: "2026-02-01T12:00:00Z"
+                claimed:
+                  summary: Agent claimed, API key delivered
+                  value:
+                    status: "claimed"
+                    apiKey: "sk_live_abc123def456..."
+                    configUrl: "/agents/0197f96c-b278-7f64-a32f-dae3cabe1ff0/configuration"
+        '404':
+          description: Agent registration not found or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: "Agent registration not found or has expired"
+                code: "AGENT_CLAIM_NOT_FOUND"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /agents/claim:
+    post:
+      tags:
+        - agent
+        - current
+      summary: Claim an agent (Web UI)
+      description: |
+        User claims an agent by providing the agentId and claimToken found in 
+        the agent's startup logs. This endpoint:
+        
+        1. Validates the claim token
+        2. Creates the agent in the production agents table
+        3. Generates an API key for the agent
+        4. Associates agent with user's tenant and chosen section
+        5. Marks claim as satisfied
+        
+        The agent will receive the API key on its next poll to /agents/{agentId}/claim-status.
+      operationId: claimAgent
+      security:
+        - OAuth2AuthorizationCode: [agent:write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimAgentRequest'
+            example:
+              agentId: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
+              claimToken: "ABC123XY"
+              sectionId: "0197f96d-1234-7f64-a32f-dae3cabe1ff0"
+              name: "Production Server 01"
+      responses:
+        '200':
+          description: Agent claimed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimAgentResponse'
+              example:
+                agentId: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
+                status: "claimed"
+                message: "Agent will receive API key on next poll"
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Forbidden'
-        '409':
-          description: Agent already registered
+          description: Forbidden - Invalid claim token or expired
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              example:
+                message: "Invalid or expired claim token"
+                code: "CLAIM_TOKEN_INVALID"
+        '404':
+          description: Agent registration not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: "Agent registration not found"
+                code: "AGENT_CLAIM_NOT_FOUND"
+        '409':
+          description: Agent already claimed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: "Agent has already been claimed"
+                code: "AGENT_ALREADY_CLAIMED"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /agent/{agentId}/configuration:
     get:
@@ -1980,6 +2138,142 @@ components:
           type: string
           format: uri
           example: "https://api.smotra.net/api/v1/agent/019bdeb2-50dc-794e-808b-cf47526b867f/configuration"
+
+    AgentSelfRegistration:
+      type: object
+      required:
+        - agentId
+        - claimTokenHash
+        - hostname
+        - agentVersion
+      properties:
+        agentId:
+          $ref: '#/components/schemas/UUIDv7'
+          description: Self-generated UUIDv7 identifier for this agent
+          example: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
+        claimTokenHash:
+          type: string
+          minLength: 64
+          maxLength: 64
+          pattern: '^[a-f0-9]{64}$'
+          description: SHA-256 hash of the claim token (plain token shown in agent logs for user)
+          example: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+        hostname:
+          type: string
+          description: System hostname of the machine running the agent
+          example: "prod-server-01"
+        agentVersion:
+          type: string
+          description: Version of the agent software
+          example: "1.0.0"
+
+    AgentRegistrationResponse:
+      type: object
+      required:
+        - status
+        - pollUrl
+        - claimUrl
+        - expiresAt
+      properties:
+        status:
+          type: string
+          enum: [pending_claim]
+          description: Current status of the registration
+        pollUrl:
+          type: string
+          format: uri-reference
+          description: URL for agent to poll for claim status
+          example: "/agents/0197f96c-b278-7f64-a32f-dae3cabe1ff0/claim-status"
+        claimUrl:
+          type: string
+          format: uri
+          description: URL for user to claim the agent (web UI)
+          example: "https://yoursite.com/claim"
+        expiresAt:
+          type: string
+          format: date-time
+          description: When the claim token expires (RFC3339)
+          example: "2026-02-01T12:00:00Z"
+
+    ClaimStatusPending:
+      type: object
+      required:
+        - status
+        - expiresAt
+      properties:
+        status:
+          type: string
+          enum: [pending_claim]
+          description: Agent is waiting to be claimed
+        expiresAt:
+          type: string
+          format: date-time
+          description: When the claim token expires (RFC3339)
+          example: "2026-02-01T12:00:00Z"
+
+    ClaimStatusClaimed:
+      type: object
+      required:
+        - status
+        - apiKey
+        - configUrl
+      properties:
+        status:
+          type: string
+          enum: [claimed]
+          description: Agent has been claimed and API key is ready
+        apiKey:
+          type: string
+          description: API key for authenticated requests (one-time delivery)
+        configUrl:
+          type: string
+          format: uri-reference
+          description: URL to fetch agent configuration
+          example: "/agents/0197f96c-b278-7f64-a32f-dae3cabe1ff0/configuration"
+
+    ClaimAgentRequest:
+      type: object
+      required:
+        - agentId
+        - claimToken
+        - sectionId
+      properties:
+        agentId:
+          $ref: '#/components/schemas/UUIDv7'
+          description: Agent ID from agent logs
+          example: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
+        claimToken:
+          type: string
+          description: Claim token from agent logs
+          example: "ABC123XY"
+        sectionId:
+          $ref: '#/components/schemas/UUIDv7'
+          description: Section to assign this agent to within your tenant
+          example: "0197f96d-1234-7f64-a32f-dae3cabe1ff0"
+        name:
+          type: string
+          description: Human-readable name for the agent (defaults to hostname if not provided)
+          example: "Production Server 01"
+
+    ClaimAgentResponse:
+      type: object
+      required:
+        - agentId
+        - status
+        - message
+      properties:
+        agentId:
+          $ref: '#/components/schemas/UUIDv7'
+          description: The claimed agent's ID
+          example: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
+        status:
+          type: string
+          enum: [claimed]
+          description: Claim status
+        message:
+          type: string
+          description: Human-readable message
+          example: "Agent will receive API key on next poll"
 
     PluginConfiguration:
       type: object
