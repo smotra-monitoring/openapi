@@ -156,7 +156,7 @@ paths:
         3. Agent hashes token with SHA-256 and sends hash to server
         4. Agent shows plain token in logs for user to copy
         5. Server creates record in agent_claims table
-        6. Agent starts polling /agents/{agentId}/claim-status
+        6. Agent starts polling /agent/{agentId}/claim-status
         7. User claims agent via web UI using agentId + plain claimToken
         8. Server hashes user's input and validates against stored hash
         9. Agent receives API key on next poll
@@ -188,7 +188,7 @@ paths:
                 $ref: '#/components/schemas/AgentRegistrationResponse'
               example:
                 status: "pending_claim"
-                pollUrl: "/agents/0197f96c-b278-7f64-a32f-dae3cabe1ff0/claim-status"
+                pollUrl: "/agent/0197f96c-b278-7f64-a32f-dae3cabe1ff0/claim-status"
                 claimUrl: "https://yoursite.com/claim"
                 expiresAt: "2026-02-01T12:00:00Z"
         '200':
@@ -202,7 +202,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /agents/{agentId}/claim-status:
+  /agent/{agentId}/claim-status:
     get:
       tags:
         - agent
@@ -246,7 +246,7 @@ paths:
                   value:
                     status: "claimed"
                     apiKey: "sk_live_abc123def456..."
-                    configUrl: "/agents/0197f96c-b278-7f64-a32f-dae3cabe1ff0/configuration"
+                    configUrl: "/agent/0197f96c-b278-7f64-a32f-dae3cabe1ff0/configuration"
         '404':
           description: Agent registration not found or expired
           content:
@@ -259,7 +259,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /agents/claim:
+  /agent/claim:
     post:
       tags:
         - agent
@@ -275,7 +275,7 @@ paths:
         4. Associates agent with user's tenant and chosen section
         5. Marks claim as satisfied
         
-        The agent will receive the API key on its next poll to /agents/{agentId}/claim-status.
+        The agent will receive the API key on its next poll to /agent/{agentId}/claim-status.
       operationId: claimAgent
       security:
         - OAuth2AuthorizationCode: [agent:write]
@@ -2183,7 +2183,7 @@ components:
           type: string
           format: uri-reference
           description: URL for agent to poll for claim status
-          example: "/agents/0197f96c-b278-7f64-a32f-dae3cabe1ff0/claim-status"
+          example: "/agent/0197f96c-b278-7f64-a32f-dae3cabe1ff0/claim-status"
         claimUrl:
           type: string
           format: uri
@@ -2229,7 +2229,7 @@ components:
           type: string
           format: uri-reference
           description: URL to fetch agent configuration
-          example: "/agents/0197f96c-b278-7f64-a32f-dae3cabe1ff0/configuration"
+          example: "/agent/0197f96c-b278-7f64-a32f-dae3cabe1ff0/configuration"
 
     ClaimAgentRequest:
       type: object
