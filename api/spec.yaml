@@ -1440,7 +1440,7 @@ components:
         Used for automated systems and integrations.
       flows:
         clientCredentials:
-          tokenUrl: /api/v1/auth/oauth2/token
+          tokenUrl: /v1/auth/oauth2/token
           scopes:
             metrics:read: "Read access to metrics"
             metrics:write: "Write access to metrics"
@@ -2137,7 +2137,7 @@ components:
         configuration_url:
           type: string
           format: uri
-          example: "https://api.smotra.net/api/v1/agent/019bdeb2-50dc-794e-808b-cf47526b867f/configuration"
+          example: "https://api.smotra.net/v1/agent/019bdeb2-50dc-794e-808b-cf47526b867f/configuration"
 
     AgentSelfRegistration:
       type: object
