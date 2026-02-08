@@ -56,7 +56,7 @@ Agent implementation should prioritize low resource usage to minimize impact on 
 - Authentication endpoints for user login and management.
 - /metrics endpoint for Prometheus monitoring.
 - /healthz endpoint for server status monitoring.
-- API versioning implementet via URL path (e.g., /api/v1/).
+- API versioning implementet via URL path (e.g., /v1/).
 
 # Deployment
 - Use Docker for containerization of the server components.
