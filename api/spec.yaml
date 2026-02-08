@@ -1405,9 +1405,9 @@ components:
         Supports multiple identity providers including Okta, Auth0, Azure AD, and Google.
       flows:
         authorizationCode:
-          authorizationUrl: /api/v1/auth/oauth2/authorize
-          tokenUrl: /api/v1/auth/oauth2/token
-          refreshUrl: /api/v1/auth/oauth2/token
+          authorizationUrl: /v1/auth/oauth2/authorize
+          tokenUrl: /v1/auth/oauth2/token
+          refreshUrl: /v1/auth/oauth2/token
           scopes:
             openid: "OpenID Connect scope"
             profile: "Access to user profile information"
