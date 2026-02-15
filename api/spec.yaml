@@ -3006,6 +3006,7 @@ components:
       format: uuid
       description: UUID version 7 as per RFC 4122
       example: "0183f5e2-1dd2-7f8a-9abc-1234567890ab"
+      x-rust-type: Uuid
       x-go-type: uuid.UUID
       x-go-type-import:
         name: uuid
