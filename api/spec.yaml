@@ -1329,13 +1329,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthStatus'
+                $ref: '#/components/schemas/SystemStatus'
         '503':
           description: Server is unhealthy
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthStatus'
+                $ref: '#/components/schemas/SystemStatus'
 
   /healthz/ready:
     get:
@@ -2939,7 +2939,7 @@ components:
     # HEALTH SCHEMAS
     # ============================================
 
-    HealthStatus:
+    SystemStatus:
       type: object
       required:
         - status
@@ -2957,36 +2957,47 @@ components:
         uptime_seconds:
           type: integer
         components:
-          type: object
-          additionalProperties:
-            type: object
-            required:
-              - status
-            properties:
-              status:
-                title: ComponentHealthStatus
-                $ref: '#/components/schemas/SystemHealthStatus'
-              message:
-                type: string
-              response_time_ms:
-                type: number
-                format: float
-          example:
-            database:
-              status: "healthy"
-              response_time_ms: 2.5
-            redis:
-              status: "healthy"
-              response_time_ms: 0.8
-            oauth_provider:
-              status: "healthy"
-              message: "Connected to Okta"
-            agents:
-              status: "healthy"
-              message: "42 agents connected"
-            websocket:
-              status: "healthy"
-              message: "15 active connections"
+            $ref: '#/components/schemas/ComponentsStatus'
+
+    ComponentsStatus:
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/ComponentStatus'
+      example:
+        database:
+          status: "healthy"
+          response_time_ms: 2.5
+        redis:
+          status: "healthy"
+          response_time_ms: 0.8
+        oauth_provider:
+          status: "healthy"
+          message: "Connected to Okta"
+        agents:
+          status: "healthy"
+          message: "42 agents connected"
+        websocket:
+          status: "healthy"
+          message: "15 active connections"
+
+    ComponentStatus:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          title: ComponentHealthStatus
+          $ref: '#/components/schemas/ComponentHealthStatus'
+        message:
+          type: string
+        response_time_ms:
+          type: number
+          format: float
+      example:
+        database:
+          status: "healthy"
+          response_time_ms: 2.5
+
 
     # ============================================
     # COMMON SCHEMAS
