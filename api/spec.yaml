@@ -276,7 +276,7 @@ paths:
         5. Marks claim as satisfied
         
         The agent will receive the API key on its next poll to /agent/{agentId}/claim-status.
-      operationId: claimAgent
+      operationId: postClaimAgent
       security:
         - OAuth2AuthorizationCode: [agent:write]
       requestBody:
@@ -284,7 +284,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SchemaClaimAgentRequest'
+              $ref: '#/components/schemas/ClaimAgentRequest'
             example:
               agentId: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
               claimToken: "ABC123XY"
@@ -1043,7 +1043,7 @@ paths:
         - users
       summary: Create user
       description: Create a new user (admin only)
-      operationId: createUser
+      operationId: postCreateUser
       security:
         - OAuth2AuthorizationCode: [users:write, admin]
       requestBody:
@@ -1051,7 +1051,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SchemaCreateUserRequest'
+              $ref: '#/components/schemas/CreateUserRequest'
       responses:
         '201':
           description: User created successfully
@@ -1088,7 +1088,7 @@ paths:
       tags:
         - users
       summary: Update user
-      operationId: updateUser
+      operationId: patchUser
       security:
         - OAuth2AuthorizationCode: [users:write]
       parameters:
@@ -1098,7 +1098,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SchemaUpdateUserRequest'
+              $ref: '#/components/schemas/UpdateUserRequest'
       responses:
         '200':
           description: User updated successfully
@@ -1193,7 +1193,7 @@ paths:
       tags:
         - organizations
       summary: Create organization
-      operationId: createOrganization
+      operationId: postCreateOrganization
       security:
         - OAuth2AuthorizationCode: [admin, super_admin]
       requestBody:
@@ -1201,7 +1201,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SchemaCreateOrganizationRequest'
+              $ref: '#/components/schemas/CreateOrganizationRequest'
       responses:
         '201':
           description: Organization created
@@ -2231,7 +2231,7 @@ components:
           description: URL to fetch agent configuration
           example: "/agent/0197f96c-b278-7f64-a32f-dae3cabe1ff0/configuration"
 
-    SchemaClaimAgentRequest:
+    ClaimAgentRequest:
       type: object
       required:
         - agentId
@@ -2848,7 +2848,7 @@ components:
           type: string
           description: User ID from external identity provider
 
-    SchemaCreateUserRequest:
+    CreateUserRequest:
       type: object
       required:
         - email
@@ -2870,7 +2870,7 @@ components:
           format: uuid
           description: Required for super admins creating users in other orgs
 
-    SchemaUpdateUserRequest:
+    UpdateUserRequest:
       type: object
       properties:
         name:
@@ -2929,7 +2929,7 @@ components:
           type: string
           format: date-time
 
-    SchemaCreateOrganizationRequest:
+    CreateOrganizationRequest:
       type: object
       required:
         - name
