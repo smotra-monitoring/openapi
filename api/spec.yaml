@@ -2119,24 +2119,6 @@ components:
             environment: "production"
             datacenter: "us-east-1"
 
-    AgentCredentials:
-      type: object
-      required:
-        - agent_id
-        - api_key
-      properties:
-        agent_id:
-          $ref: '#/components/schemas/UUIDv7'
-          example: "019bdeb2-50dc-794e-808b-cf47526b867f"
-        api_key:
-          type: string
-          description: API key for agent authentication
-          example: "ak_1234567890abcdef"
-        configuration_url:
-          type: string
-          format: uri
-          example: "https://api.smotra.net/v1/agent/019bdeb2-50dc-794e-808b-cf47526b867f/configuration"
-
     AgentSelfRegistration:
       type: object
       required:
