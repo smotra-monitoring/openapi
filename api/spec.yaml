@@ -284,7 +284,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ClaimAgentRequest'
+              $ref: '#/components/schemas/SchemaClaimAgentRequest'
             example:
               agentId: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
               claimToken: "ABC123XY"
@@ -523,9 +523,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResultReport'
-            text/csv:
-              schema:
-                type: string
+            # text/csv:
+            #   schema:
+            #     type: string
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1051,7 +1051,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateUserRequest'
+              $ref: '#/components/schemas/SchemaCreateUserRequest'
       responses:
         '201':
           description: User created successfully
@@ -1098,7 +1098,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateUserRequest'
+              $ref: '#/components/schemas/SchemaUpdateUserRequest'
       responses:
         '200':
           description: User updated successfully
@@ -1201,7 +1201,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateOrganizationRequest'
+              $ref: '#/components/schemas/SchemaCreateOrganizationRequest'
       responses:
         '201':
           description: Organization created
@@ -2231,7 +2231,7 @@ components:
           description: URL to fetch agent configuration
           example: "/agent/0197f96c-b278-7f64-a32f-dae3cabe1ff0/configuration"
 
-    ClaimAgentRequest:
+    SchemaClaimAgentRequest:
       type: object
       required:
         - agentId
@@ -2848,7 +2848,7 @@ components:
           type: string
           description: User ID from external identity provider
 
-    CreateUserRequest:
+    SchemaCreateUserRequest:
       type: object
       required:
         - email
@@ -2870,7 +2870,7 @@ components:
           format: uuid
           description: Required for super admins creating users in other orgs
 
-    UpdateUserRequest:
+    SchemaUpdateUserRequest:
       type: object
       properties:
         name:
@@ -2929,7 +2929,7 @@ components:
           type: string
           format: date-time
 
-    CreateOrganizationRequest:
+    SchemaCreateOrganizationRequest:
       type: object
       required:
         - name
