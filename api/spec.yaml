@@ -1329,13 +1329,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthStatus'
+                $ref: '#/components/schemas/SystemStatus'
         '503':
           description: Server is unhealthy
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthStatus'
+                $ref: '#/components/schemas/SystemStatus'
 
   /healthz/ready:
     get:
@@ -2031,8 +2031,7 @@ components:
           type: string
           format: date-time
         status:
-          type: string
-          enum: [healthy, degraded]
+          $ref: '#/components/schemas/AgentHealthStatus'
           default: healthy
         cpu_usage_percent:
           type: number
@@ -2061,8 +2060,7 @@ components:
           description: Target host, IP, or URL
           example: "192.168.1.100"
         status:
-          type: string
-          enum: [reachable, unreachable, degraded, unknown]
+          $ref: '#/components/schemas/MetricStatus'
           description: Status of the check
         response_time_ms:
           type: number
@@ -2121,24 +2119,6 @@ components:
             environment: "production"
             datacenter: "us-east-1"
 
-    AgentCredentials:
-      type: object
-      required:
-        - agent_id
-        - api_key
-      properties:
-        agent_id:
-          $ref: '#/components/schemas/UUIDv7'
-          example: "019bdeb2-50dc-794e-808b-cf47526b867f"
-        api_key:
-          type: string
-          description: API key for agent authentication
-          example: "ak_1234567890abcdef"
-        configuration_url:
-          type: string
-          format: uri
-          example: "https://api.smotra.net/v1/agent/019bdeb2-50dc-794e-808b-cf47526b867f/configuration"
-
     AgentSelfRegistration:
       type: object
       required:
@@ -2176,8 +2156,8 @@ components:
         - expiresAt
       properties:
         status:
-          type: string
-          enum: [pending_claim]
+          title: RegistrationStatus
+          $ref: '#/components/schemas/RegistrationStatus'
           description: Current status of the registration
         pollUrl:
           type: string
@@ -2202,8 +2182,8 @@ components:
         - expiresAt
       properties:
         status:
-          type: string
-          enum: [pending_claim]
+          title: ClaimStatusPendingEnum
+          $ref: '#/components/schemas/ClaimStatusPendingEnum'
           description: Agent is waiting to be claimed
         expiresAt:
           type: string
@@ -2219,8 +2199,7 @@ components:
         - configUrl
       properties:
         status:
-          type: string
-          enum: [claimed]
+          $ref: '#/components/schemas/ClaimStatusClaimedEnum'
           description: Agent has been claimed and API key is ready
         apiKey:
           type: string
@@ -2267,8 +2246,7 @@ components:
           description: The claimed agent's ID
           example: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
         status:
-          type: string
-          enum: [claimed]
+          $ref: '#/components/schemas/ClaimResponseStatus'
           description: Claim status
         message:
           type: string
@@ -2338,8 +2316,7 @@ components:
         request_id:
           $ref: '#/components/schemas/UUIDv7'
         status:
-          type: string
-          enum: [accepted, queued]
+          $ref: '#/components/schemas/ReportAckStatus'
         received_at:
           type: string
           format: date-time
@@ -2415,8 +2392,7 @@ components:
         metric_type:
           type: string
         status:
-          type: string
-          enum: [reachable, unreachable, degraded, unknown]
+          $ref: '#/components/schemas/AggregatedMetricStatus'
         avg_response_time_ms:
           type: number
           format: float
@@ -2535,8 +2511,7 @@ components:
         description:
           type: string
         status:
-          type: string
-          enum: [active, acknowledged, resolved]
+          $ref: '#/components/schemas/AlertStatus'
         severity:
           type: string
           enum: [critical, warning, info]
@@ -2828,8 +2803,8 @@ components:
           type: string
           format: uuid
         status:
-          type: string
-          enum: [active, inactive, suspended]
+          title: UserStatus
+          $ref: '#/components/schemas/UserStatus'
         created_at:
           type: string
           format: date-time
@@ -2876,8 +2851,7 @@ components:
         name:
           type: string
         status:
-          type: string
-          enum: [active, inactive, suspended]
+          $ref: '#/components/schemas/UpdateUserStatus'
         roles:
           type: array
           items:
@@ -2906,8 +2880,7 @@ components:
           pattern: '^[a-z0-9-]+$'
           example: "acme-corp"
         status:
-          type: string
-          enum: [active, suspended, trial]
+          $ref: '#/components/schemas/OrganizationStatus'
         plan:
           type: string
           enum: [free, professional, enterprise]
@@ -2948,15 +2921,15 @@ components:
     # HEALTH SCHEMAS
     # ============================================
 
-    HealthStatus:
+    SystemStatus:
       type: object
       required:
         - status
         - timestamp
       properties:
         status:
-          type: string
-          enum: [healthy, degraded, unhealthy]
+          title: SystemHealthStatus
+          $ref: '#/components/schemas/SystemHealthStatus'
         timestamp:
           type: string
           format: date-time
@@ -2966,40 +2939,122 @@ components:
         uptime_seconds:
           type: integer
         components:
-          type: object
-          additionalProperties:
-            type: object
-            required:
-              - status
-            properties:
-              status:
-                type: string
-                enum: [healthy, degraded, unhealthy]
-              message:
-                type: string
-              response_time_ms:
-                type: number
-                format: float
-          example:
-            database:
-              status: "healthy"
-              response_time_ms: 2.5
-            redis:
-              status: "healthy"
-              response_time_ms: 0.8
-            oauth_provider:
-              status: "healthy"
-              message: "Connected to Okta"
-            agents:
-              status: "healthy"
-              message: "42 agents connected"
-            websocket:
-              status: "healthy"
-              message: "15 active connections"
+            $ref: '#/components/schemas/ComponentsStatus'
+
+    ComponentsStatus:
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/ComponentStatus'
+      example:
+        database:
+          status: "healthy"
+          response_time_ms: 2.5
+        redis:
+          status: "healthy"
+          response_time_ms: 0.8
+        oauth_provider:
+          status: "healthy"
+          message: "Connected to Okta"
+        agents:
+          status: "healthy"
+          message: "42 agents connected"
+        websocket:
+          status: "healthy"
+          message: "15 active connections"
+
+    ComponentStatus:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          title: ComponentHealthStatus
+          $ref: '#/components/schemas/ComponentHealthStatus'
+        message:
+          type: string
+        response_time_ms:
+          type: number
+          format: float
+      example:
+        database:
+          status: "healthy"
+          response_time_ms: 2.5
+
 
     # ============================================
     # COMMON SCHEMAS
     # ============================================
+
+    # Status enums (extracted to avoid name conflicts)
+    AgentHealthStatus:
+      type: string
+      enum: [healthy, degraded]
+      description: Health status of the agent
+
+    MetricStatus:
+      type: string
+      enum: [reachable, unreachable, degraded, unknown]
+      description: Status of a monitoring check
+
+    RegistrationStatus:
+      type: string
+      enum: [pending_claim]
+      description: Status of agent registration
+
+    ClaimStatusPendingEnum:
+      type: string
+      enum: [pending_claim]
+      description: Pending claim status   
+
+    ClaimStatusClaimedEnum:
+      type: string
+      enum: [claimed]
+      description: Claimed status
+
+    ClaimResponseStatus:
+      type: string
+      enum: [claimed]
+      description: Status in claim response
+
+    ReportAckStatus:
+      type: string
+      enum: [accepted, queued]
+      description: Report acknowledgment status
+
+    AggregatedMetricStatus:
+      type: string
+      enum: [reachable, unreachable, degraded, unknown]
+      description: Metric status
+
+    AlertStatus:
+      type: string
+      enum: [active, acknowledged, resolved]
+      description: Alert status
+
+    UserStatus:
+      type: string
+      enum: [active, inactive, suspended]
+      description: User account status
+
+    UpdateUserStatus:
+      type: string
+      enum: [active, inactive, suspended]
+      description: Updated user status
+
+    OrganizationStatus:
+      type: string
+      enum: [active, suspended, trial]
+      description: Organization status
+
+    SystemHealthStatus:
+      type: string
+      enum: [healthy, degraded, unhealthy]
+      description: System health status
+
+    ComponentHealthStatus:
+      type: string
+      enum: [healthy, degraded, unhealthy]
+      description: Component health status
 
     UUIDv7:
       type: string
