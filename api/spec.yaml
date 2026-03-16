@@ -2180,6 +2180,7 @@ components:
       required:
         - status
         - expiresAt
+        - pollIn
       properties:
         status:
           title: ClaimStatusPendingEnum
@@ -2190,6 +2191,12 @@ components:
           format: date-time
           description: When the claim token expires (RFC3339)
           example: "2026-02-01T12:00:00Z"
+        pollIn:
+          type: integer
+          format: int32
+          description: Seconds until next poll (server-controlled backoff)
+          example: 30
+          minimum: 1
 
     ClaimStatusClaimed:
       type: object
