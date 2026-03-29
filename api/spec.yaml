@@ -434,7 +434,7 @@ paths:
       summary: Submit batch monitoring results
       description: |
         Agent submits a batch of monitoring results that were buffered in its
-        in-memory result cache. The server deduplicates by `result.id` so
+        local result cache. The server deduplicates by `result.id` so
         retransmitting the same batch on network failure is safe.
       operationId: submitAgentResults
       security:
@@ -453,7 +453,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReportAcknowledgment'
+                $ref: '#/components/schemas/ResultsBatchAcknowledgment'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1868,7 +1868,6 @@ components:
           items:
             $ref: '#/components/schemas/MonitoringResult'
           description: Ordered list of monitoring results (oldest-first)
-          example: []
 
     CheckType:
       oneOf:
@@ -2399,6 +2398,29 @@ components:
     # ============================================
     # RESULT SCHEMAS
     # ============================================
+
+    ResultsBatchAcknowledgment:
+      type: object
+      required:
+        - submission_id
+        - accepted
+        - received_at
+      properties:
+        submission_id:
+          $ref: '#/components/schemas/UUIDv7'
+          description: Server-assigned ID for this batch submission
+        accepted:
+          type: integer
+          description: Number of results accepted for processing
+          example: 25
+        duplicates_skipped:
+          type: integer
+          description: Number of results deduplicated (already known to the server)
+          example: 0
+        received_at:
+          type: string
+          format: date-time
+          description: Timestamp when the batch was received by the server
 
     ResultReport:
       type: object
