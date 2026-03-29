@@ -112,6 +112,8 @@ paths:
                 summary: Single reachability check
                 value: {
                   "agent_id":"e65ed2cc-6581-44dd-aa3b-6445b2ed8b25",
+                  "agent_version":"0.0.55",
+                  "config_version":42,
                   "cached_reports":0,
                   "checks_failed":0,
                   "checks_performed":0,
@@ -1518,6 +1520,8 @@ components:
       type: object
       required:
         - agent_id
+        - agent_version
+        - config_version
         - is_running
         - started_at
         - stopped_at
@@ -1530,9 +1534,17 @@ components:
         - cached_reports
       properties:
         agent_id:
+          $ref: '#/components/schemas/UUIDv7'
+          description: Self-generated UUIDv7 identifier for this agent
+          example: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
+        agent_version:
           type: string
-          description: Unique identifier for the agent
-          example: "agent-001"
+          description: Version of the agent
+          example: "0.0.1"
+        config_version:
+          type: integer
+          description: Version of the agent configuration
+          example: 23
         is_running:
           type: boolean
           description: Whether the agent is currently running
