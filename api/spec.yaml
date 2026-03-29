@@ -426,6 +426,41 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /agent/{agentId}/results:
+    post:
+      tags:
+        - agent
+        - current
+      summary: Submit batch monitoring results
+      description: |
+        Agent submits a batch of monitoring results that were buffered in its
+        in-memory result cache. The server deduplicates by `result.id` so
+        retransmitting the same batch on network failure is safe.
+      operationId: submitAgentResults
+      security:
+        - AgentApiKey: []
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchMonitoringResults'
+      responses:
+        '202':
+          description: Batch accepted for processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportAcknowledgment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/InternalServerError'
+
   # ============================================
   # RESULT ENDPOINTS
   # ============================================
@@ -1819,6 +1854,21 @@ components:
           format: date-time
           description: Timestamp when the report was generated (RFC3339)
           example: "2025-11-19T10:30:00Z"
+
+    BatchMonitoringResults:
+      type: object
+      required:
+        - results
+      description: |
+        A batch of monitoring results submitted by an agent from its local cache.
+        The server deduplicates entries by `MonitoringResult.id`.
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/MonitoringResult'
+          description: Ordered list of monitoring results (oldest-first)
+          example: []
 
     CheckType:
       oneOf:
