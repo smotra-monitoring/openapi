@@ -1801,8 +1801,8 @@ components:
 
     Endpoint:
       type: object
+      description: An endpoint to monitor (IP address, hostname, or URL)
       required:
-        - id
         - address
         - enabled
       properties:
@@ -1836,13 +1836,11 @@ components:
         - timestamp
       properties:
         id:
-          type: string
+          $ref: '#/components/schemas/UUIDv7'
           description: Unique identifier for the monitoring result
-          example: "irusdf-1234-abcd-5678-efghijklmnop"
         agent_id:
-          type: string
+          $ref: '#/components/schemas/UUIDv7'
           description: Unique identifier for the agent
-          example: "agent-001"
         target:
           description: Monitoring target information
           $ref: '#/components/schemas/Endpoint'
@@ -1887,13 +1885,36 @@ components:
           httpget: '#/components/schemas/HttpGetCheck'
           plugin: '#/components/schemas/PluginCheck'
 
+    PingCheckType:
+      type: string
+      enum: [ping]
+
+    TracerouteCheckType:
+      type: string
+      enum: [traceroute]
+
+    TcpConnectCheckType:
+      type: string
+      enum: [tcpconnect]
+
+    UdpConnectCheckType:
+      type: string
+      enum: [udpconnect]
+
+    HttpGetCheckType:
+      type: string
+      enum: [httpget]
+
+    PluginCheckType:
+      type: string
+      enum: [plugin]
+
     PingCheck:
       type: object
       required: [type, result]
       properties:
         type:
-          type: string
-          enum: [ping]
+          $ref: '#/components/schemas/PingCheckType'
         result:
           $ref: '#/components/schemas/PingResult'
 
@@ -1903,6 +1924,7 @@ components:
         resolved_ip:
           type: string
           nullable: true
+          example: "4.2.2.2"
         successes:
           type: integer
           format: int32
@@ -1914,22 +1936,24 @@ components:
           items:
             type: number
             format: double
+          example: [12.5, 13.0, 11.8]
         avg_response_time_ms:
           type: number
           format: double
           nullable: true
+          example: 12.43
         errors:
           type: array
           items:
             type: string
+          example: ["Timeout", "Host unreachable"]
 
     TracerouteCheck:
       type: object
       required: [type, result]
       properties:
         type:
-          type: string
-          enum: [traceroute]
+          $ref: '#/components/schemas/TracerouteCheckType'
         result:
           $ref: '#/components/schemas/TracerouteResult'
 
@@ -1974,8 +1998,7 @@ components:
       required: [type, result]
       properties:
         type:
-          type: string
-          enum: [tcpconnect]
+          $ref: '#/components/schemas/TcpConnectCheckType'
         result:
           $ref: '#/components/schemas/TcpConnectResult'
 
@@ -2000,8 +2023,7 @@ components:
       required: [type, result]
       properties:
         type:
-          type: string
-          enum: [udpconnect]
+          $ref: '#/components/schemas/UdpConnectCheckType'
         result:
           $ref: '#/components/schemas/UdpConnectResult'
 
@@ -2026,8 +2048,7 @@ components:
       required: [type, result]
       properties:
         type:
-          type: string
-          enum: [httpget]
+          $ref: '#/components/schemas/HttpGetCheckType'
         result:
           $ref: '#/components/schemas/HttpGetResult'
 
@@ -2057,8 +2078,7 @@ components:
       required: [type, result]
       properties:
         type:
-          type: string
-          enum: [plugin]
+          $ref: '#/components/schemas/PluginCheckType'
         result:
           $ref: '#/components/schemas/PluginResult'
 
