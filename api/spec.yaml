@@ -1566,7 +1566,7 @@ components:
         - last_report_at
         - failed_report_count
         - server_connected
-        - cached_reports
+        - cache_stats
       properties:
         agent_id:
           $ref: '#/components/schemas/UUIDv7'
@@ -1620,10 +1620,24 @@ components:
           type: boolean
           description: Whether the agent is currently connected to the server
           example: true
-        cached_reports:
+        cache_stats:
+          $ref: '#/components/schemas/AgentCacheStats'
+          description: Current state of the local result cache
+
+    AgentCacheStats:
+      type: object
+      required:
+        - len
+        - capacity
+      properties:
+        len:
           type: integer
-          description: Number of reports cached locally on the agent
-          example: 0
+          description: Number of results currently buffered in the local cache
+          example: 42
+        capacity:
+          type: integer
+          description: Maximum number of results the cache can hold (hard cap)
+          example: 10000
 
     AgentConfig:
       type: object
