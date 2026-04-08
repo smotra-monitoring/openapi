@@ -1943,7 +1943,8 @@ components:
       properties:
         resolved_ip:
           type: string
-          nullable: true
+          format: ipv4
+          description: Resolved IP address of the target
           example: "4.2.2.2"
         successes:
           type: integer
@@ -2002,8 +2003,6 @@ components:
       type: object
       required:
         - hop
-        - address
-        - response_time_ms
       properties:
         hop:
           type: integer
@@ -2011,14 +2010,11 @@ components:
         address:
           type: string
           format: ipv4
-          nullable: true
         response_time_ms:
           type: number
           format: double
-          nullable: true
         hostname:
           type: string
-          nullable: true
 
     TcpConnectCheck:
       type: object
@@ -2046,7 +2042,6 @@ components:
           nullable: true
         resolved_ip:
           type: string
-          nullable: true
 
     UdpConnectCheck:
       type: object
@@ -2074,7 +2069,6 @@ components:
           nullable: true
         resolved_ip:
           type: string
-          nullable: true
 
     HttpGetCheck:
       type: object
@@ -2094,7 +2088,6 @@ components:
         status_code:
           type: integer
           format: int32
-          nullable: true
         response_time_ms:
           type: number
           format: double
