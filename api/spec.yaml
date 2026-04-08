@@ -1819,6 +1819,7 @@ components:
       required:
         - address
         - enabled
+        - tags
       properties:
         id:
           $ref: '#/components/schemas/UUIDv7'
@@ -1934,6 +1935,11 @@ components:
 
     PingResult:
       type: object
+      required:
+        - resolved_ip
+        - successes
+        - failures
+        - success_latencies
       properties:
         resolved_ip:
           type: string
@@ -1973,6 +1979,9 @@ components:
 
     TracerouteResult:
       type: object
+      required:
+        - hops
+        - target_reached
       properties:
         hops:
           type: array
@@ -1991,6 +2000,10 @@ components:
 
     TracerouteHop:
       type: object
+      required:
+        - hop
+        - address
+        - response_time_ms
       properties:
         hop:
           type: integer
@@ -2018,6 +2031,9 @@ components:
 
     TcpConnectResult:
       type: object
+      required:
+        - connected
+        - resolved_ip
       properties:
         connected:
           type: boolean
@@ -2043,6 +2059,9 @@ components:
 
     UdpConnectResult:
       type: object
+      required:
+        - probe_successful
+        - resolved_ip
       properties:
         probe_successful:
           type: boolean
@@ -2068,6 +2087,9 @@ components:
 
     HttpGetResult:
       type: object
+      required:
+        - status_code
+        - success
       properties:
         status_code:
           type: integer
@@ -2098,6 +2120,11 @@ components:
 
     PluginResult:
       type: object
+      required:
+        - plugin_name
+        - plugin_version
+        - success
+        - data
       properties:
         plugin_name:
           type: string
