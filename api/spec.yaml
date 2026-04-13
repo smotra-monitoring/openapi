@@ -458,6 +458,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '503':
           $ref: '#/components/responses/InternalServerError'
 
@@ -1846,7 +1848,7 @@ components:
       required:
         - id
         - agent_id
-        - target
+        - endpoint_id
         - check_type
         - timestamp
       properties:
@@ -1856,9 +1858,9 @@ components:
         agent_id:
           $ref: '#/components/schemas/UUIDv7'
           description: Unique identifier for the agent
-        target:
-          description: Monitoring target information
-          $ref: '#/components/schemas/Endpoint'
+        endpoint_id:
+          $ref: '#/components/schemas/UUIDv7'
+          description: UUID of the endpoint being monitored
         check_type:
           $ref: '#/components/schemas/CheckType'
           description: Type of check performed
@@ -3344,6 +3346,17 @@ components:
           example:
             error: "rate_limit_exceeded"
             message: "Too many requests. Please try again later."
+            request_id: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
+
+    UnprocessableEntity:
+      description: Unprocessable entity - Semantically invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "unprocessable_entity"
+            message: "The provided endpoint_id does not exist or does not belong to this agent"
             request_id: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
 
     InternalServerError:
