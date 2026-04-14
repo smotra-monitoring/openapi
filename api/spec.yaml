@@ -1819,6 +1819,7 @@ components:
       type: object
       description: An endpoint to monitor (IP address, hostname, or URL)
       required:
+        - id
         - address
         - enabled
         - tags
