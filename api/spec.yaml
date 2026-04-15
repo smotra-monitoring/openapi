@@ -2013,9 +2013,12 @@ components:
         address:
           type: string
           format: ipv4
-        response_time_ms:
-          type: number
-          format: double
+        success_latencies:
+          type: array
+          items:
+            type: number
+            format: double
+          example: [12.5, 13.0, 11.8]
         hostname:
           type: string
 
