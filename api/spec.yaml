@@ -2014,9 +2014,11 @@ components:
         hop:
           type: integer
           format: int32
-        address:
+        resolved_ip:
           type: string
           format: ipv4
+          description: Resolved IP address of the target
+          example: "4.2.2.2"
         success_latencies:
           type: array
           items:
