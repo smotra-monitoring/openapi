@@ -1817,23 +1817,19 @@ components:
 
     Endpoint:
       type: object
-      description: An endpoint to monitor
+      description: An endpoint to monitor (IP address, hostname, or URL)
       required:
         - id
-        - hostname
-        - resolved_ip
+        - address
         - enabled
         - tags
       properties:
         id:
           $ref: '#/components/schemas/UUIDv7'
           description: Unique identifier for the monitoring target
-        hostname:
+        address:
           type: string
-          description: Original monitoring target hostname, IP address, or URL as configured
-        resolved_ip:
-          type: string
-          description: Resolved IP address of the hostname (populated after DNS resolution)
+          description: IP address, hostname, or URL
         port:
           type: integer
           minimum: 1
