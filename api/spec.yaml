@@ -1970,11 +1970,9 @@ components:
           format: double
           nullable: true
           example: 12.43
-        errors:
-          type: array
-          items:
-            type: string
-          example: ["Timeout", "Host unreachable"]
+        error_details:
+          $ref: '#/components/schemas/ErrorDetails'
+          nullable: true
 
     TracerouteCheck:
       type: object
@@ -2001,10 +1999,9 @@ components:
           type: number
           format: double
           nullable: true
-        errors:
-          type: array
-          items:
-            type: string
+        error_details:
+          $ref: '#/components/schemas/ErrorDetails'
+          nullable: true
 
     TracerouteHop:
       type: object
@@ -2049,8 +2046,8 @@ components:
           type: number
           format: double
           nullable: true
-        error:
-          type: string
+        error_details:
+          $ref: '#/components/schemas/ErrorDetails'
           nullable: true
         resolved_ip:
           type: string
@@ -2076,8 +2073,8 @@ components:
           type: number
           format: double
           nullable: true
-        error:
-          type: string
+        error_details:
+          $ref: '#/components/schemas/ErrorDetails'
           nullable: true
         resolved_ip:
           type: string
@@ -2108,8 +2105,8 @@ components:
           type: integer
           format: int64
           nullable: true
-        error:
-          type: string
+        error_details:
+          $ref: '#/components/schemas/ErrorDetails'
           nullable: true
         success:
           type: boolean
@@ -2141,13 +2138,25 @@ components:
           type: number
           format: double
           nullable: true
-        error:
-          type: string
+        error_details:
+          $ref: '#/components/schemas/ErrorDetails'
           nullable: true
         data:
           type: object
           additionalProperties:
             type: string
+
+    ErrorDetails:
+      type: object
+      nullable: true
+      description: "Error information from a check, stored as an extensible JSON object"
+      properties:
+        errors:
+          type: array
+          items:
+            type: string
+          description: List of error messages from the check
+          example: ["Timeout", "Host unreachable"]
 
     AgentHeartbeat:
       type: object
