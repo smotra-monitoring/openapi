@@ -1961,11 +1961,6 @@ components:
             type: number
             format: double
           example: [12.5, 13.0, 11.8]
-        avg_response_time_ms:
-          type: number
-          format: double
-          nullable: true
-          example: 12.43
         error_details:
           $ref: '#/components/schemas/ErrorDetails'
           nullable: true
@@ -1991,10 +1986,6 @@ components:
             $ref: '#/components/schemas/TracerouteHop'
         target_reached:
           type: boolean
-        total_time_ms:
-          type: number
-          format: double
-          nullable: true
         error_details:
           $ref: '#/components/schemas/ErrorDetails'
           nullable: true
