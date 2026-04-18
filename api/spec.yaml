@@ -1817,23 +1817,19 @@ components:
 
     Endpoint:
       type: object
-      description: An endpoint to monitor
+      description: An endpoint to monitor (IP address, hostname, or URL)
       required:
         - id
-        - hostname
-        - resolved_ip
+        - address
         - enabled
         - tags
       properties:
         id:
           $ref: '#/components/schemas/UUIDv7'
           description: Unique identifier for the monitoring target
-        hostname:
+        address:
           type: string
-          description: Original monitoring target hostname, IP address, or URL as configured
-        resolved_ip:
-          type: string
-          description: Resolved IP address of the hostname (populated after DNS resolution)
+          description: IP address, hostname, or URL
         port:
           type: integer
           minimum: 1
@@ -1965,16 +1961,9 @@ components:
             type: number
             format: double
           example: [12.5, 13.0, 11.8]
-        avg_response_time_ms:
-          type: number
-          format: double
+        error_details:
+          $ref: '#/components/schemas/ErrorDetails'
           nullable: true
-          example: 12.43
-        errors:
-          type: array
-          items:
-            type: string
-          example: ["Timeout", "Host unreachable"]
 
     TracerouteCheck:
       type: object
@@ -1997,14 +1986,9 @@ components:
             $ref: '#/components/schemas/TracerouteHop'
         target_reached:
           type: boolean
-        total_time_ms:
-          type: number
-          format: double
+        error_details:
+          $ref: '#/components/schemas/ErrorDetails'
           nullable: true
-        errors:
-          type: array
-          items:
-            type: string
 
     TracerouteHop:
       type: object
@@ -2049,8 +2033,8 @@ components:
           type: number
           format: double
           nullable: true
-        error:
-          type: string
+        error_details:
+          $ref: '#/components/schemas/ErrorDetails'
           nullable: true
         resolved_ip:
           type: string
@@ -2076,8 +2060,8 @@ components:
           type: number
           format: double
           nullable: true
-        error:
-          type: string
+        error_details:
+          $ref: '#/components/schemas/ErrorDetails'
           nullable: true
         resolved_ip:
           type: string
@@ -2108,8 +2092,8 @@ components:
           type: integer
           format: int64
           nullable: true
-        error:
-          type: string
+        error_details:
+          $ref: '#/components/schemas/ErrorDetails'
           nullable: true
         success:
           type: boolean
@@ -2141,13 +2125,25 @@ components:
           type: number
           format: double
           nullable: true
-        error:
-          type: string
+        error_details:
+          $ref: '#/components/schemas/ErrorDetails'
           nullable: true
         data:
           type: object
           additionalProperties:
             type: string
+
+    ErrorDetails:
+      type: object
+      nullable: true
+      description: "Error information from a check, stored as an extensible JSON object"
+      properties:
+        errors:
+          type: array
+          items:
+            type: string
+          description: List of error messages from the check
+          example: ["Timeout", "Host unreachable"]
 
     AgentHeartbeat:
       type: object
