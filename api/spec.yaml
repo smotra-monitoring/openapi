@@ -877,12 +877,37 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              oneOf:
-                - $ref: '#/components/schemas/AuthorizationCodeTokenRequest'
-                - $ref: '#/components/schemas/RefreshTokenRequest'
-            encoding:
-              grant_type:
-                style: form
+              type: object
+              required:
+                - provider
+                - grant_type
+              properties:
+                provider:
+                  type: string
+                  description: |
+                    Identity provider name. Must match a provider configured on the server.
+                    Built-in values: okta, auth0, azure, google, github.
+                  example: google
+                grant_type:
+                  type: string
+                  enum: [authorization_code, refresh_token]
+                  description: OAuth2 grant type
+                code:
+                  type: string
+                  description: Authorization code (required for authorization_code grant)
+                redirect_uri:
+                  type: string
+                  format: uri
+                  description: Must exactly match the redirect_uri used in the authorization request (required for authorization_code grant)
+                code_verifier:
+                  type: string
+                  description: PKCE code verifier (required for authorization_code grant)
+                refresh_token:
+                  type: string
+                  description: Refresh token (required for refresh_token grant)
+                scope:
+                  type: string
+                  description: Optional scope restriction (refresh_token grant only)
       responses:
         '200':
           description: Tokens issued successfully
