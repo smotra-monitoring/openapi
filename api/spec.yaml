@@ -2730,58 +2730,6 @@ components:
     # AUTHENTICATION & AUTHORIZATION SCHEMAS
     # ============================================
 
-    AuthorizationCodeTokenRequest:
-      type: object
-      required:
-        - provider
-        - grant_type
-        - code
-        - redirect_uri
-        - code_verifier
-      properties:
-        provider:
-          type: string
-          description: |
-            Identity provider name. Must match a provider configured on the server.
-            Built-in values: okta, auth0, azure, google, github.
-          example: google
-        grant_type:
-          type: string
-          enum: [authorization_code]
-        code:
-          type: string
-          description: Authorization code received at the callback endpoint
-        redirect_uri:
-          type: string
-          format: uri
-          description: Must exactly match the redirect_uri used in the authorization request
-        code_verifier:
-          type: string
-          description: PKCE code verifier (plain secret that was hashed to produce code_challenge)
-
-    RefreshTokenRequest:
-      type: object
-      required:
-        - provider
-        - grant_type
-        - refresh_token
-      properties:
-        provider:
-          type: string
-          description: |
-            Identity provider name. Must match a provider configured on the server.
-            Built-in values: okta, auth0, azure, google, github.
-          example: google
-        grant_type:
-          type: string
-          enum: [refresh_token]
-        refresh_token:
-          type: string
-          description: Refresh token previously issued by the IDP
-        scope:
-          type: string
-          description: Optional scope restriction (subset of originally granted scopes)
-
     TokenResponse:
       type: object
       required:
