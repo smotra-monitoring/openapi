@@ -181,6 +181,20 @@ paths:
               claimTokenHash: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
               hostname: "prod-server-01"
               agentVersion: "1.0.0"
+              ipAddresses: [
+                {
+                  ip: "192.168.1.1",
+                  iface: "eth0",
+                  family: "ipv4",
+                  recommended: true
+                },
+                {
+                  ip: "fe80::1",
+                  iface: "eth0",
+                  family: "ipv6",
+                  recommended: false
+                }
+              ]
       responses:
         '201':
           description: Agent registration request created
