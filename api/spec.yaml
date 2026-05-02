@@ -182,6 +182,20 @@ paths:
               claimTokenHash: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
               hostname: "prod-server-01"
               agentVersion: "1.0.0"
+              ipAddresses: [
+                {
+                  ip: "192.168.1.1",
+                  iface: "eth0",
+                  family: "ipv4",
+                  recommended: true
+                },
+                {
+                  ip: "fe80::1",
+                  iface: "eth0",
+                  family: "ipv6",
+                  recommended: false
+                }
+              ]
       responses:
         '201':
           description: Agent registration request created
@@ -2322,6 +2336,35 @@ components:
             environment: "production"
             datacenter: "us-east-1"
 
+    AgentNetworkInterface:
+      type: object
+      required:
+        - ip
+        - iface
+        - family
+        - recommended
+      properties:
+        ip:
+          type: string
+          description: IP address of the network interface (IPv4 or IPv6, excluding loopback and link-local)
+          example: "192.168.1.10"
+        iface:
+          type: string
+          description: Name of the network interface
+          example: "eth0"
+        family:
+          $ref: '#/components/schemas/IpAddressFamily'
+          description: IP address family
+          example: "ipv4"
+        recommended:
+          type: boolean
+          description: |
+            Whether this address is recommended for the server to use when communicating
+            with the agent. Determined by the agent using the OS routing table: the source
+            IP the OS selects when opening a connection toward the server is marked as
+            recommended. Only one entry will have recommended=true.
+          example: true
+
     AgentSelfRegistration:
       type: object
       required:
@@ -2329,6 +2372,7 @@ components:
         - claimTokenHash
         - hostname
         - agentVersion
+        - ipAddresses
       properties:
         agentId:
           $ref: '#/components/schemas/UUIDv7'
@@ -2349,6 +2393,31 @@ components:
           type: string
           description: Version of the agent software
           example: "1.0.0"
+        ipAddresses:
+          type: array
+          description: |
+            List of all non-loopback, non-link-local network interfaces on the agent host.
+            Loopback (127.x.x.x / ::1) and link-local (169.254.x.x / fe80::/10) addresses
+            are excluded. The server should store all addresses and allow the operator to
+            select the preferred one during the claim process. The entry with
+            recommended=true reflects the OS-selected source IP for connections toward
+            the server (determined via routing table, no traffic sent).
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/AgentNetworkInterface'
+          example:
+            - ip: "192.168.1.10"
+              iface: "eth0"
+              family: "ipv4"
+              recommended: true
+            - ip: "10.0.0.5"
+              iface: "eth1"
+              family: "ipv4"
+              recommended: false
+            - ip: "2001:db8::1"
+              iface: "eth0"
+              family: "ipv6"
+              recommended: false
 
     AgentRegistrationResponse:
       type: object
@@ -3173,6 +3242,11 @@ components:
       type: string
       enum: [pending_claim]
       description: Status of agent registration
+
+    IpAddressFamily:
+      type: string
+      enum: [ipv4, ipv6]
+      description: IP address family (IPv4 or IPv6)
 
     ClaimStatusPendingEnum:
       type: string
