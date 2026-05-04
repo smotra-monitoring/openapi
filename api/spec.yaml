@@ -422,8 +422,13 @@ paths:
     post:
       tags:
         - agent
+        - current
       summary: Send agent heartbeat
-      description: Lightweight endpoint for agents to signal they are alive
+      description: |
+        Lightweight endpoint for agents to signal they are alive and 
+        report host resource utilisation (CPU, memory). When cpu_usage_percent
+        and memory_usage_mb / memory_total_mb are included, the server stores
+        a time-series snapshot in agent_vitals for dashboard display.
       operationId: sendAgentHeartbeat
       security:
         - AgentApiKey: []
@@ -435,11 +440,21 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/AgentHeartbeat'
+            example:
+              timestamp: "2026-05-03T12:00:00Z"
+              status: healthy
+              cpu_usage_percent: 23.5
+              memory_usage_mb: 1024.0
+              memory_total_mb: 8192.0
       responses:
         '204':
           description: Heartbeat received
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/InternalServerError'
 
   /agent/{agentId}/results:
     post:
@@ -2243,19 +2258,34 @@ components:
       type: object
       required:
         - timestamp
+        - status
+        - cpu_usage_percent
+        - memory_usage_mb
+        - memory_total_mb
       properties:
         timestamp:
           type: string
           format: date-time
+          description: Agent-local timestamp when the heartbeat was generated (RFC3339)
         status:
           $ref: '#/components/schemas/AgentHealthStatus'
-          default: healthy
+          description: Health status of the agent
         cpu_usage_percent:
           type: number
           format: float
+          minimum: 0
+          maximum: 100
+          description: CPU utilisation percentage (0.0–100.0)
         memory_usage_mb:
           type: number
           format: float
+          minimum: 0
+          description: Resident memory currently in use (MB)
+        memory_total_mb:
+          type: number
+          format: float
+          minimum: 0
+          description: Total physical memory available (MB)
 
     # ============================================
     # NOT CHECKED 
@@ -2633,6 +2663,7 @@ components:
           format: date-time
           description: Timestamp when the batch was received by the server
 
+    # ============================================
     ResultReport:
       type: object
       required:
