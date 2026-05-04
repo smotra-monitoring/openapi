@@ -2262,6 +2262,7 @@ components:
         - cpu_usage_percent
         - memory_usage_mb
         - memory_total_mb
+        - system_uptime_secs
       properties:
         timestamp:
           type: string
@@ -2286,6 +2287,11 @@ components:
           format: float
           minimum: 0
           description: Total physical memory available (MB)
+        system_uptime_secs:
+          type: integer
+          format: int64
+          minimum: 0
+          description: System uptime in seconds
 
     # ============================================
     # NOT CHECKED 
