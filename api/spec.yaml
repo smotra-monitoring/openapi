@@ -426,7 +426,7 @@ paths:
       summary: Send agent heartbeat
       description: |
         Lightweight endpoint for agents to signal they are alive and 
-        report host resource utilisation (CPU, memory). When cpu_usage_percent
+        report host resource utilization (CPU, memory). When cpu_usage_percent
         and memory_usage_mb / memory_total_mb are included, the server stores
         a time-series snapshot in agent_vitals for dashboard display.
       operationId: sendAgentHeartbeat
@@ -2276,7 +2276,7 @@ components:
           format: float
           minimum: 0
           maximum: 100
-          description: CPU utilisation percentage (0.0–100.0)
+          description: CPU utilization percentage (0.0–100.0)
         memory_usage_mb:
           type: number
           format: float
