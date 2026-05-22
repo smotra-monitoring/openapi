@@ -1035,8 +1035,8 @@ paths:
         The old token is revoked atomically. The server transparently refreshes the
         underlying IdP token if needed.
 
-        Clients should call this proactively before `absolute_expires_at` (e.g. at
-        the midpoint). Returns a new TokenResponse with a fresh absolute_expires_at.
+        Clients should call this proactively before `expires_at` (e.g. at
+        the midpoint). Returns a new TokenResponse with a fresh expires_at.
       operationId: authRefresh
       security:
         - OAuth2AuthorizationCode: []
@@ -2977,7 +2977,7 @@ components:
       type: object
       required:
         - opaque_token
-        - absolute_expires_at
+        - expires_at
       properties:
         opaque_token:
           type: string
@@ -2986,7 +2986,7 @@ components:
             Authorization header for all subsequent requests.
             Format: st_live_<hex> (production) or st_test_<hex> (dev/test).
           example: "st_live_.............................."
-        absolute_expires_at:
+        expires_at:
           type: string
           format: date-time
           description: |
