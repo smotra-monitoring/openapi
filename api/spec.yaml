@@ -931,12 +931,16 @@ paths:
     post:
       tags:
         - authentication
-      summary: Exchange authorization code or refresh token for tokens
+      summary: Exchange authorization code for a server-managed session token
       description: |
-        Proxies a token request to the identity provider configured on the server.
-        Supports authorization_code (PKCE) and refresh_token grant types.
-        
-        client_id and IDP token URL are resolved server-side from provider config.
+        Completes the PKCE authorization_code flow. The server exchanges the code
+        with the IdP, stores IdP tokens server-side, creates a session, and returns
+        a server-managed opaque token.
+
+        IdP tokens are never returned to the client. The provider is resolved
+        server-side from the pending state (stored during /authorize).
+
+        client_id and IdP token URL are resolved server-side from provider config.
         client_secret is never used (PKCE-only flow).
       operationId: oauth2Token
       security: []
@@ -947,38 +951,28 @@ paths:
             schema:
               type: object
               required:
-                - provider
                 - grant_type
+                - code
+                - redirect_uri
+                - code_verifier
               properties:
-                provider:
-                  type: string
-                  description: |
-                    Identity provider name. Must match a provider configured on the server.
-                    Built-in values: okta, auth0, azure, google, github.
-                  example: google
                 grant_type:
                   type: string
-                  enum: [authorization_code, refresh_token]
-                  description: OAuth2 grant type
+                  enum: [authorization_code]
+                  description: OAuth2 grant type (only authorization_code is supported here)
                 code:
                   type: string
-                  description: Authorization code (required for authorization_code grant)
+                  description: Authorization code returned by the IDP callback
                 redirect_uri:
                   type: string
                   format: uri
-                  description: Must exactly match the redirect_uri used in the authorization request (required for authorization_code grant)
+                  description: Must exactly match the redirect_uri used in the authorization request
                 code_verifier:
                   type: string
-                  description: PKCE code verifier (required for authorization_code grant)
-                refresh_token:
-                  type: string
-                  description: Refresh token (required for refresh_token grant)
-                scope:
-                  type: string
-                  description: Optional scope restriction (refresh_token grant only)
+                  description: PKCE code verifier corresponding to the code_challenge sent at /authorize
       responses:
         '200':
-          description: Tokens issued successfully
+          description: Session created; opaque token returned
           content:
             application/json:
               schema:
@@ -992,42 +986,31 @@ paths:
     post:
       tags:
         - authentication
-      summary: Revoke access or refresh token
+      summary: Revoke a server-managed session token
       description: |
-        Revoke a previously issued token by proxying to the IDP revocation endpoint.
-        
-        If the provider does not support token revocation (e.g., GitHub), the server
-        returns 200 with a warning — revocation is treated as a no-op.
+        Revokes the session associated with the provided opaque token.
+        The token is immediately invalidated on the server. The server also
+        attempts to revoke the underlying IdP token (best-effort; ignored if
+        the provider does not support revocation).
       operationId: oauth2Revoke
       security:
         - OAuth2AuthorizationCode: []
       requestBody:
         required: true
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               required:
-                - provider
-                - token
+                - opaque_token
               properties:
-                provider:
+                opaque_token:
                   type: string
-                  description: |
-                    Identity provider name. Must match a provider configured on the server.
-                    Built-in values: okta, auth0, azure, google, github.
-                  example: google
-                token:
-                  type: string
-                  description: Token to revoke
-                token_type_hint:
-                  type: string
-                  enum: [access_token, refresh_token]
-                  description: Optional hint about the token type
+                  description: The opaque session token to revoke (as returned by /auth/oauth2/token or /auth/refresh)
+                  example: "st_live_......................."
       responses:
         '200':
-          description: |
-            Token revoked (or acknowledged as no-op for providers without revocation support).
+          description: Session revoked successfully.
           content:
             application/json:
               schema:
@@ -1035,10 +1018,35 @@ paths:
                 properties:
                   warning:
                     type: string
-                    description: Present if revocation was not performed (provider limitation)
+                    description: Present if IdP revocation was skipped (provider limitation)
                     example: "Provider 'github' does not support token revocation"
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/refresh:
+    post:
+      tags:
+        - authentication
+      summary: Refresh a server-managed session token
+      description: |
+        Issues a new opaque session token for the currently authenticated session.
+        The old token is revoked atomically. The server transparently refreshes the
+        underlying IdP token if needed.
+
+        Clients should call this proactively before `expires_at` (e.g. at
+        the midpoint). Returns a new TokenResponse with a fresh expires_at.
+      operationId: authRefresh
+      security:
+        - OAuth2AuthorizationCode: []
+      responses:
+        '200':
+          description: New session token issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -1048,21 +1056,11 @@ paths:
         - authentication
       summary: Get current user information
       description: |
-        Retrieve information about the authenticated user by proxying to the IDP
-        userinfo endpoint. Requires a valid Bearer token in the Authorization header.
+        Retrieve information about the authenticated user from the local database.
+        Requires a valid opaque session token in the Authorization header.
       operationId: getUserInfo
       security:
         - OAuth2AuthorizationCode: [openid, profile, email]
-      parameters:
-        - name: provider
-          in: query
-          required: true
-          description: |
-            Identity provider name. Must match a provider configured on the server.
-            Built-in values: okta, auth0, azure, google, github.
-          schema:
-            type: string
-            example: google
       responses:
         '200':
           description: User information retrieved
@@ -1081,9 +1079,10 @@ paths:
         - authentication
       summary: User logout
       description: |
-        Revoke the current token and redirect the browser to the IDP end-session
-        endpoint (if the provider supports it).
-        
+        Revokes the current session and redirects the browser to the IDP end-session
+        endpoint (if the provider supports it). The provider is resolved server-side
+        from the session — no provider parameter is needed from the client.
+
         For providers with an end-session endpoint (Okta, Auth0, Azure, Google),
         the server responds with 302 to that endpoint.
         For providers without one (GitHub), the server responds with 200.
@@ -1095,15 +1094,7 @@ paths:
           application/json:
             schema:
               type: object
-              required:
-                - provider
               properties:
-                provider:
-                  type: string
-                  description: |
-                    Identity provider name. Must match a provider configured on the server.
-                    Built-in values: okta, auth0, azure, google, github.
-                  example: google
                 post_logout_redirect_uri:
                   type: string
                   format: uri
@@ -2985,32 +2976,24 @@ components:
     TokenResponse:
       type: object
       required:
-        - access_token
-        - token_type
-        - expires_in
+        - opaque_token
+        - expires_at
       properties:
-        access_token:
+        opaque_token:
           type: string
-          description: JWT access token
-          example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
-        token_type:
+          description: |
+            Server-managed opaque session token. Use as a Bearer token in the
+            Authorization header for all subsequent requests.
+            Format: st_live_<hex> (production) or st_test_<hex> (dev/test).
+          example: "st_live_.............................."
+        expires_at:
           type: string
-          example: "Bearer"
-        expires_in:
-          type: integer
-          description: Token lifetime in seconds
-          example: 3600
-        refresh_token:
-          type: string
-          description: Refresh token (only for authorization_code grant)
-          example: "rt_1234567890abcdef"
-        scope:
-          type: string
-          description: Space-separated list of granted scopes
-          example: "openid profile email metrics:read"
-        id_token:
-          type: string
-          description: OpenID Connect ID token (if openid scope requested)
+          format: date-time
+          description: |
+            Hard expiry time (ISO 8601). The session will never be valid after
+            this timestamp regardless of activity. Use this to schedule a
+            proactive re-login in the client (e.g. at the midpoint).
+          example: "2025-10-15T12:00:00Z"
 
     UserInfo:
       type: object
