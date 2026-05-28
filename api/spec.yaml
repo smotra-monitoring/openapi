@@ -88,60 +88,6 @@ paths:
   # AGENT ENDPOINTS
   # ============================================
   
-  /agent/report:
-    post:
-      tags:
-        - agent
-      summary: Submit agent monitoring report
-      description: |
-        Agents use this endpoint to submit collected monitoring data including 
-        reachability checks, performance metrics, and system health information.
-        
-        This endpoint supports batch submissions for efficiency when agents are 
-        recovering from offline periods.
-      operationId: submitAgentStatus
-      security:
-        - AgentApiKey: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AgentStatus'
-            examples:
-              singleCheck:
-                summary: Single reachability check
-                value: {
-                  "agent_id":"e65ed2cc-6581-44dd-aa3b-6445b2ed8b25",
-                  "agent_version":"0.0.55",
-                  "config_version":42,
-                  "cached_reports":0,
-                  "checks_failed":0,
-                  "checks_performed":0,
-                  "checks_successful":0,
-                  "failed_report_count":0,
-                  "is_running":true,
-                  "last_report_at":null,
-                  "server_connected":false,
-                  "started_at":"2025-11-21T19:38:43.290410900Z",
-                  "stopped_at":null
-                }
-      responses:
-        '202':
-          description: Report accepted for processing
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ReportAcknowledgment'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '429':
-          $ref: '#/components/responses/RateLimitExceeded'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
   /agent/register:
     post:
       tags:
@@ -377,42 +323,6 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
-        '501':
-          $ref: '#/components/responses/NotImplemented'
-        '503':
-          $ref: '#/components/responses/InternalServerError'
-
-    put:
-      tags:
-        - agent
-        - configuration
-      summary: Update agent configuration
-      description: Update configuration for a specific agent
-      operationId: updateAgentConfiguration
-      security:
-        - OAuth2AuthorizationCode: [agent:write, config:write]
-        - OAuth2ClientCredentials: [agent:write, config:write]
-      parameters:
-        - $ref: '#/components/parameters/AgentId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AgentConfig'
-      responses:
-        '200':
-          description: Configuration updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AgentConfig'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
         '501':
           $ref: '#/components/responses/NotImplemented'
         '503':
@@ -1653,79 +1563,6 @@ components:
     # CHECKED 
     # ============================================
 
-    AgentStatus:
-      type: object
-      required:
-        - agent_id
-        - agent_version
-        - config_version
-        - is_running
-        - started_at
-        - stopped_at
-        - checks_performed
-        - checks_successful
-        - checks_failed
-        - last_report_at
-        - failed_report_count
-        - server_connected
-        - cache_stats
-      properties:
-        agent_id:
-          $ref: '#/components/schemas/UUIDv7'
-          description: Self-generated UUIDv7 identifier for this agent
-          example: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
-        agent_version:
-          type: string
-          description: Version of the agent
-          example: "0.0.1"
-        config_version:
-          type: integer
-          description: Version of the agent configuration
-          example: 23
-        is_running:
-          type: boolean
-          description: Whether the agent is currently running
-          example: true
-        started_at:
-          type: string
-          format: date-time
-          description: Timestamp when the agent started in UTC (RFC3339), null if never started
-          example: "2025-11-21T00:04:00.484745200Z"
-        stopped_at:
-          type: string
-          format: date-time
-          nullable: true
-          description: Timestamp when the agent stopped in UTC (RFC3339), null if running
-          example: "2025-11-21T00:04:00.484745200Z"
-        checks_performed:
-          type: integer
-          description: Total number of checks performed by the agent
-          example: 12345
-        checks_successful:
-          type: integer
-          description: Number of successful checks
-          example: 12000
-        checks_failed:
-          type: integer
-          description: Number of failed checks
-          example: 345
-        last_report_at:
-          type: string
-          format: date-time
-          description: Timestamp of the last report received from the agent (RFC3339)
-          example: "2025-11-21T12:00:00Z"
-        failed_report_count:
-          type: integer
-          description: Number of consecutive failed report attempts
-          example: 0
-        server_connected:
-          type: boolean
-          description: Whether the agent is currently connected to the server
-          example: true
-        cache_stats:
-          $ref: '#/components/schemas/AgentCacheStats'
-          description: Current state of the local result cache
-
     AgentCacheStats:
       type: object
       required:
@@ -2611,27 +2448,6 @@ components:
           format: float
           minimum: 1
           default: 2
-
-    ReportAcknowledgment:
-      type: object
-      required:
-        - request_id
-        - status
-        - received_at
-      properties:
-        request_id:
-          $ref: '#/components/schemas/UUIDv7'
-        status:
-          $ref: '#/components/schemas/ReportAckStatus'
-        received_at:
-          type: string
-          format: date-time
-        configuration_version:
-          type: integer
-          description: Latest configuration version available
-        update_available:
-          type: boolean
-          description: Whether agent update is available
 
     # ============================================
     # RESULT SCHEMAS
