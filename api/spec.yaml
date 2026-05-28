@@ -92,7 +92,6 @@ paths:
     post:
       tags:
         - agent
-        - current
       summary: Agent self-registration (unclaimed)
       description: |
         Agents use this endpoint to self-register when starting for the first time.
@@ -169,7 +168,6 @@ paths:
     get:
       tags:
         - agent
-        - current
       summary: Check agent claim status (polling endpoint)
       description: |
         Agent polls this endpoint to check if it has been claimed by a user.
@@ -226,7 +224,6 @@ paths:
     post:
       tags:
         - agent
-        - current
       summary: Claim an agent (Web UI)
       description: |
         User claims an agent by providing the agentId and claimToken found in 
@@ -302,8 +299,6 @@ paths:
     get:
       tags:
         - agent
-        - configuration
-        - current
       summary: Get agent configuration
       description: Retrieve current configuration for a specific agent
       operationId: getAgentConfiguration
@@ -332,7 +327,6 @@ paths:
     post:
       tags:
         - agent
-        - current
       summary: Send agent heartbeat
       description: |
         Lightweight endpoint for agents to signal they are alive and 
@@ -370,7 +364,6 @@ paths:
     post:
       tags:
         - agent
-        - current
       summary: Submit batch monitoring results
       description: |
         Agent submits a batch of monitoring results that were buffered in its
