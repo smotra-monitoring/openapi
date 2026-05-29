@@ -83,3 +83,89 @@ Agent implementation should prioritize low resource usage to minimize impact on 
 - Clearly define terms for commercial usage and contributions.
 - Include a CONTRIBUTING.md file to guide contributors on how to participate in the project.
 
+# Testing Requirements
+
+**CRITICAL**: The following rules apply without exception:
+- **New features**: unit tests AND integration tests MUST be created alongside the implementation.
+- **Bug fixes**: a regression test MUST be added that reproduces the bug before the fix and passes after.
+- **Refactors**: existing tests must continue to pass; add new tests for any previously untested code paths uncovered during refactoring.
+
+## Unit Tests
+Unit tests should be placed in the same file as the code being tested, in a `_test.go` file or using Go's `testing` package conventions.
+
+Requirements:
+- **Coverage**: Every exported function, method, and handler must have corresponding unit tests
+- **Edge Cases**: Test edge cases, error conditions, and boundary values
+- **Mocking**: Use appropriate mocking for external dependencies (database, HTTP clients)
+- **Table-Driven Tests**: Prefer table-driven tests for testing multiple input/output combinations
+- **Assertions**: Use clear, descriptive assertions with helpful failure messages
+
+Example structure:
+```go
+// handler_test.go
+func TestHandlerName(t *testing.T) {
+    tests := []struct {
+        name     string
+        input    InputType
+        expected ExpectedType
+        wantErr  bool
+    }{
+        {name: "normal case", ...},
+        {name: "edge case", ...},
+        {name: "error case", ..., wantErr: true},
+    }
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            // test body
+        })
+    }
+}
+```
+
+## Integration Tests
+Integration tests should cover complete API endpoint workflows including request/response validation.
+
+Requirements:
+- **Real Scenarios**: Test realistic API request/response cycles
+- **HTTP Testing**: Use `httptest` package for handler testing
+- **Database**: Use test fixtures or an in-memory/test database
+- **Isolation**: Tests should be isolated and not depend on each other
+- **Cleanup**: Always clean up created resources after each test
+
+## When Generating Code
+1. **Write the implementation code**
+2. **Immediately write unit tests** in the corresponding `_test.go` file
+3. **Create or update integration tests** for full endpoint workflows
+4. **Run tests** to verify they pass (`go test ./...`)
+5. **Document any test assumptions or requirements**
+
+## When Fixing Bugs
+1. **Write a failing regression test** that reproduces the bug
+2. **Fix the bug** so the regression test passes
+3. **Ensure all existing tests still pass**
+4. **Document the root cause** in the test's comment
+
+## Test Coverage Goals
+- **Minimum**: 80% code coverage for all packages
+- **API Handlers**: 95%+ coverage for all HTTP handlers
+- **Error Paths**: All error paths and edge cases must be tested
+
+# Documentation
+
+**IMPORTANT**: All project documentation MUST be maintained in the `docs/` folder relative to the repository root. Do not create documentation files in the project root or other directories unless specifically required.
+
+## Feature Documentation
+**CRITICAL**: All new features implemented in the project MUST be documented in the `docs/` folder.
+
+### Documentation Requirements for Features
+- **Create Dedicated Documentation**: For each major feature or endpoint group, create a corresponding documentation file
+- **Include Examples**: Every feature documentation MUST include practical examples (curl commands, request/response samples)
+- **OpenAPI Spec**: All endpoints must be defined in the OpenAPI specification (`api/openapi/api/spec.yaml`)
+- **Update on Change**: When modifying a feature, update its documentation simultaneously
+- **Edge Cases**: Document edge cases, limitations, and error responses
+
+### Guidelines
+- Keep the OpenAPI spec as the primary API reference and single source of truth for endpoint contracts
+- Link to the OpenAPI spec from other documentation
+- Provide example request/response bodies for every endpoint
+
