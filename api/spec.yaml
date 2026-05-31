@@ -397,6 +397,53 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
   # ============================================
+  # AGENT LIST ENDPOINT
+  # ============================================
+
+  /agents:
+    get:
+      tags:
+        - agent
+      summary: List agents
+      description: |
+        Returns a paginated list of agents belonging to the authenticated user's tenant.
+        Each agent entry includes all non-sensitive fields. The response is ordered by
+        creation date (newest first).
+
+        **Permissions:** Requires a valid OAuth2 session. Agent API keys are not accepted.
+      operationId: listAgents
+      security:
+        - OAuth2AuthorizationCode: [agents:read]
+        - OAuth2ClientCredentials: [agents:read]
+      parameters:
+        - name: page
+          in: query
+          description: Page number (1-based)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          description: Number of agents per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Agent list retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================================
   # RESULT ENDPOINTS
   # ============================================
 
@@ -2221,6 +2268,77 @@ components:
             IP the OS selects when opening a connection toward the server is marked as
             recommended. Only one entry will have recommended=true.
           example: true
+
+    AgentListItem:
+      type: object
+      required:
+        - id
+        - sectionId
+        - name
+        - configVersion
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          $ref: '#/components/schemas/UUIDv7'
+          description: Unique agent identifier
+        sectionId:
+          type: string
+          description: Section (organizational unit) this agent belongs to
+          example: "01930000-0000-7000-0000-000000000001"
+        name:
+          type: string
+          description: Human-readable agent name
+          example: "prod-server-01"
+        configVersion:
+          type: integer
+          description: Current configuration version
+          example: 3
+        agentVersion:
+          type: string
+          nullable: true
+          description: Version of the agent software, null if not yet reported
+          example: "1.2.0"
+        ipAddresses:
+          type: array
+          description: Network interfaces reported by the agent
+          items:
+            $ref: '#/components/schemas/AgentNetworkInterface'
+        lastSeenAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp of the last heartbeat received from the agent
+          example: "2026-05-30T10:00:00Z"
+        lastResultSubmittedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp of the last monitoring result submission
+          example: "2026-05-30T09:55:00Z"
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the agent was registered
+          example: "2026-01-01T00:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the agent record was last updated
+          example: "2026-05-30T10:00:00Z"
+
+    AgentListResponse:
+      type: object
+      required:
+        - agents
+        - pagination
+      properties:
+        agents:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentListItem'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
 
     AgentSelfRegistration:
       type: object
