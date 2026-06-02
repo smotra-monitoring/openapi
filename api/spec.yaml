@@ -2269,7 +2269,7 @@ components:
             recommended. Only one entry will have recommended=true.
           example: true
 
-    AgentListItem:
+    Agent:
       type: object
       required:
         - id
@@ -2336,7 +2336,7 @@ components:
         agents:
           type: array
           items:
-            $ref: '#/components/schemas/AgentListItem'
+            $ref: '#/components/schemas/Agent'
         pagination:
           $ref: '#/components/schemas/Pagination'
 
