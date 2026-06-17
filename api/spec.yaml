@@ -1580,6 +1580,7 @@ components:
         - monitoring
         - server
         - storage
+        - update
         - endpoints
       properties:
         version:
@@ -1607,6 +1608,8 @@ components:
           $ref: '#/components/schemas/ServerConfig'
         storage:
           $ref: '#/components/schemas/StorageConfig'
+        update:
+          $ref: '#/components/schemas/UpdateConfig'
         endpoints:
           type: array
           items:
@@ -1743,6 +1746,31 @@ components:
           description: Maximum age of cached results in seconds (e.g., 86400 = 24 hours)
           default: 86400
           minimum: 0
+          example: 86400
+
+    UpdateConfig:
+      type: object
+      required:
+        - enabled
+        - check_url
+        - check_interval_secs
+      properties:
+        enabled:
+          type: boolean
+          description: Enables self-upgrade checks when true
+          default: false
+          example: true
+        check_url:
+          type: string
+          format: uri
+          description: Base URL where release metadata and artifacts are hosted
+          example: "https://github.com/smotra-monitoring/agent"
+        check_interval_secs:
+          type: integer
+          format: int64
+          description: Periodic self-upgrade check interval in seconds
+          minimum: 60
+          default: 86400
           example: 86400
 
     Endpoint:
