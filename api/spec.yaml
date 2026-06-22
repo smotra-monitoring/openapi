@@ -1799,7 +1799,7 @@ components:
       type: object
       required:
         - enabled
-        - check_url
+        - github_repo_url
         - check_interval_secs
       properties:
         enabled:
@@ -1807,10 +1807,10 @@ components:
           description: Enables self-upgrade checks when true
           default: false
           example: true
-        check_url:
+        github_repo_url:
           type: string
           format: uri
-          description: Base URL where release metadata and artifacts are hosted
+          description: GitHub repository URL for checking latest releases (must be a public repo)
           example: "https://github.com/smotra-monitoring/agent"
         check_interval_secs:
           type: integer
