@@ -1627,7 +1627,7 @@ components:
         - monitoring
         - server
         - storage
-        - self_update
+        - self_upgrade
         - endpoints
       properties:
         version:
@@ -1655,8 +1655,8 @@ components:
           $ref: '#/components/schemas/ServerConfig'
         storage:
           $ref: '#/components/schemas/StorageConfig'
-        self_update:
-          $ref: '#/components/schemas/SelfUpdateConfig'
+        self_upgrade:
+          $ref: '#/components/schemas/SelfUpgradeConfig'
         endpoints:
           type: array
           items:
@@ -1795,7 +1795,7 @@ components:
           minimum: 0
           example: 86400
 
-    SelfUpdateConfig:
+    SelfUpgradeConfig:
       type: object
       required:
         - enabled
