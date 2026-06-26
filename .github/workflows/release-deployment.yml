@@ -21,6 +21,11 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    environment:
+      name: Release
+      url: https://docs.smotra.net
+
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -33,8 +38,11 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: Run tests
-        run: go test -race -v ./...
+      - name: Run tests and check
+        run: |
+          go vet ./... && \
+          go fmt ./... && \
+          go test -race -v ./...
 
       - name: Build binary
         run: CGO_ENABLED=0 go build -ldflags "-s -w" -o server ./cmd/server
