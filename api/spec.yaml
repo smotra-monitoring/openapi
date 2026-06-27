@@ -330,9 +330,8 @@ paths:
       summary: Send agent heartbeat
       description: |
         Lightweight endpoint for agents to signal they are alive and 
-        report host resource utilization (CPU, memory). When cpu_usage_percent
-        and memory_usage_mb / memory_total_mb are included, the server stores
-        a time-series snapshot in agent_vitals for dashboard display.
+        report host resource utilization (CPU, memory). The server stores
+        the metrics snapshot in agent_vitals for dashboard display.
       operationId: sendAgentHeartbeat
       security:
         - AgentApiKey: []
@@ -346,10 +345,13 @@ paths:
               $ref: '#/components/schemas/AgentHeartbeat'
             example:
               timestamp: "2026-05-03T12:00:00Z"
-              status: healthy
-              cpu_usage_percent: 23.5
-              memory_usage_mb: 1024.0
-              memory_total_mb: 8192.0
+              health_status: healthy
+              metrics:
+                agent_uptime_secs: 3600
+                cpu_usage_percent: 23.5
+                memory_usage_mb: 1024.0
+                memory_total_mb: 8192.0
+                system_uptime_secs: 86400
       responses:
         '204':
           description: Heartbeat received
@@ -2154,19 +2156,34 @@ components:
       type: object
       required:
         - timestamp
-        - status
-        - cpu_usage_percent
-        - memory_usage_mb
-        - memory_total_mb
-        - system_uptime_secs
+        - health_status
+        - metrics
       properties:
         timestamp:
           type: string
           format: date-time
           description: Agent-local timestamp when the heartbeat was generated (RFC3339)
-        status:
+        health_status:
           $ref: '#/components/schemas/AgentHealthStatus'
           description: Health status of the agent
+        metrics:
+          $ref: '#/components/schemas/AgentMetrics'
+          description: System resource utilisation metrics
+
+    AgentMetrics:
+      type: object
+      required:
+        - cpu_usage_percent
+        - memory_usage_mb
+        - memory_total_mb
+        - system_uptime_secs
+        - agent_uptime_secs
+      properties:
+        agent_uptime_secs:
+          type: integer
+          format: int64
+          minimum: 0
+          description: How long the agent process has been running in seconds; useful for detecting crashes and restarts
         cpu_usage_percent:
           type: number
           format: float
