@@ -1604,7 +1604,6 @@ components:
     AgentStatus:
       type: object
       required:
-        - agent_id
         - agent_version
         - config_version
         - is_running
@@ -1618,10 +1617,6 @@ components:
         - server_connected
         - cache_stats
       properties:
-        agent_id:
-          $ref: '#/components/schemas/UUIDv7'
-          description: Self-generated UUIDv7 identifier for this agent
-          example: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
         agent_version:
           type: string
           description: Version of the agent
