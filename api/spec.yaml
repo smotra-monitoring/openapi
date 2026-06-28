@@ -1689,22 +1689,6 @@ components:
           description: Maximum number of results the cache can hold (hard cap)
           example: 10000
 
-
-    AgentCacheStats:
-      type: object
-      required:
-        - len
-        - capacity
-      properties:
-        len:
-          type: integer
-          description: Number of results currently buffered in the local cache
-          example: 42
-        capacity:
-          type: integer
-          description: Maximum number of results the cache can hold (hard cap)
-          example: 10000
-
     AgentConfig:
       type: object
       required:
