@@ -1612,7 +1612,7 @@ components:
         - checks_performed
         - checks_successful
         - checks_failed
-        - last_report_at
+        - reported_at
         - failed_report_count
         - server_connected
         - cache_stats
@@ -1652,10 +1652,10 @@ components:
           type: integer
           description: Number of failed checks
           example: 345
-        last_report_at:
+        reported_at:
           type: string
           format: date-time
-          description: Timestamp of the last report received from the agent (RFC3339)
+          description: Timestamp of the last report sent by the agent (RFC3339)
           example: "2025-11-21T12:00:00Z"
         failed_report_count:
           type: integer
