@@ -248,7 +248,7 @@ paths:
             example:
               agentId: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
               claimToken: "ABC123XY"
-              sectionId: "0197f96d-1234-7f64-a32f-dae3cabe1ff0"
+              workspaceId: "0197f96d-1234-7f64-a32f-dae3cabe1ff0"
               name: "Production Server 01"
       responses:
         '200':
@@ -2386,7 +2386,7 @@ components:
       type: object
       required:
         - id
-        - sectionId
+        - workspaceId
         - name
         - configVersion
         - createdAt
@@ -2395,9 +2395,9 @@ components:
         id:
           $ref: '#/components/schemas/UUIDv7'
           description: Unique agent identifier
-        sectionId:
+        workspaceId:
           type: string
-          description: Section (organizational unit) this agent belongs to
+          description: Workspace this agent belongs to
           example: "01930000-0000-7000-0000-000000000001"
         name:
           type: string
@@ -2582,7 +2582,7 @@ components:
       required:
         - agentId
         - claimToken
-        - sectionId
+        - workspaceId
       properties:
         agentId:
           $ref: '#/components/schemas/UUIDv7'
@@ -2592,9 +2592,9 @@ components:
           type: string
           description: Claim token from agent logs
           example: "ABC123XY"
-        sectionId:
+        workspaceId:
           $ref: '#/components/schemas/UUIDv7'
-          description: Section to assign this agent to within your tenant
+          description: Workspace to assign this agent to within your tenant
           example: "0197f96d-1234-7f64-a32f-dae3cabe1ff0"
         name:
           type: string
