@@ -1784,7 +1784,6 @@ components:
     ServerConfig:
       type: object
       required:
-        - report_interval_secs
         - heartbeat_interval_secs
         - verify_tls
         - timeout_secs
@@ -1801,13 +1800,6 @@ components:
           description: API key for authentication
           nullable: true
           example: "sk_live_1234567890abcdef"
-        report_interval_secs:
-          type: integer
-          format: int64
-          description: Report interval in seconds
-          default: 300
-          minimum: 1
-          example: 300
         heartbeat_interval_secs:
           type: integer
           format: int64
