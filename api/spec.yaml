@@ -1690,6 +1690,7 @@ components:
         - version
         - agent_id
         - agent_name
+        - tags
         - monitoring
         - server
         - storage
@@ -1781,19 +1782,33 @@ components:
           maximum: 255
           example: 30
 
+    ClaimConfig:
+      type: object
+      required:
+        - max_registration_retries
+      properties:
+        max_registration_retries:
+          type: integer
+          format: int64
+          description: Maximum registration retry attempts
+          default: 5
+          minimum: 0
+          example: 5
+
     ServerConfig:
       type: object
       required:
+        - url
         - heartbeat_interval_secs
         - verify_tls
         - timeout_secs
         - retry_attempts
+        - claiming
       properties:
         url:
           type: string
           format: uri
           description: Server URL
-          nullable: true
           example: "https://api.smotra.net"
         api_key:
           type: string
@@ -1826,6 +1841,8 @@ components:
           default: 3
           minimum: 0
           example: 3
+        claiming:
+          $ref: '#/components/schemas/ClaimConfig'
 
     StorageConfig:
       type: object
@@ -1833,6 +1850,9 @@ components:
         - cache_dir
         - max_cached_results
         - max_cache_age_secs
+        - cache_enabled
+        - cache_batch_size
+        - cache_report_interval_secs
       properties:
         cache_dir:
           type: string
@@ -1852,6 +1872,25 @@ components:
           default: 86400
           minimum: 0
           example: 86400
+        cache_enabled:
+          type: boolean
+          description: Enable in-memory result caching and batch reporting
+          default: true
+          example: true
+        cache_batch_size:
+          type: integer
+          format: int64
+          description: Number of results sent to the server in a single POST request
+          default: 100
+          minimum: 1
+          example: 100
+        cache_report_interval_secs:
+          type: integer
+          format: int64
+          description: How often (in seconds) the result reporter drains and sends a batch
+          default: 60
+          minimum: 1
+          example: 60
 
     SelfUpgradeConfig:
       type: object
