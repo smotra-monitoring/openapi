@@ -248,7 +248,6 @@ paths:
             example:
               agentId: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
               claimToken: "ABC123XY"
-              workspaceId: "0197f96d-1234-7f64-a32f-dae3cabe1ff0"
               name: "Production Server 01"
       responses:
         '200':
@@ -2613,7 +2612,6 @@ components:
       required:
         - agentId
         - claimToken
-        - workspaceId
       properties:
         agentId:
           $ref: '#/components/schemas/UUIDv7'
@@ -2623,10 +2621,6 @@ components:
           type: string
           description: Claim token from agent logs
           example: "ABC123XY"
-        workspaceId:
-          $ref: '#/components/schemas/UUIDv7'
-          description: Workspace to assign this agent to within your tenant
-          example: "0197f96d-1234-7f64-a32f-dae3cabe1ff0"
         name:
           type: string
           description: Human-readable name for the agent (defaults to hostname if not provided)
