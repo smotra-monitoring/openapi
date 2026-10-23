@@ -1072,6 +1072,88 @@ paths:
           $ref: '#/components/responses/Unauthorized'
 
   # ============================================
+  # SESSION MANAGEMENT ENDPOINTS
+  # ============================================
+
+  /sessions:
+    get:
+      tags:
+        - authentication
+      summary: List active sessions
+      description: |
+        Returns all active (not revoked, not expired) sessions of the authenticated user,
+        most recently used first. The session making the request is flagged with `is_current`.
+
+        **Permissions:** Requires a valid OAuth2 session. Agent API keys are not accepted.
+      operationId: listSessions
+      security:
+        - OAuth2AuthorizationCode: []
+      responses:
+        '200':
+          description: Active sessions retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - authentication
+      summary: Purge all other sessions
+      description: |
+        Revokes every active session of the authenticated user except the session
+        making the request. Use `/auth/logout` to end the current session.
+      operationId: purgeSessions
+      security:
+        - OAuth2AuthorizationCode: []
+      responses:
+        '200':
+          description: Sessions purged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurgeSessionsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /sessions/{session_id}:
+    delete:
+      tags:
+        - authentication
+      summary: Purge a specific session
+      description: |
+        Revokes a single session. The session must belong to the authenticated user;
+        the current session may be purged, which logs the caller out.
+      operationId: purgeSession
+      security:
+        - OAuth2AuthorizationCode: []
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          description: Session identifier (UUIDv7)
+          schema:
+            $ref: '#/components/schemas/UUIDv7'
+      responses:
+        '204':
+          description: Session purged
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================================
   # USER MANAGEMENT ENDPOINTS
   # ============================================
   
@@ -3054,6 +3136,62 @@ components:
             this timestamp regardless of activity. Use this to schedule a
             proactive re-login in the client (e.g. at the midpoint).
           example: "2025-10-15T12:00:00Z"
+
+    Session:
+      type: object
+      required:
+        - id
+        - created_at
+        - last_used_at
+        - expires_at
+        - provider
+        - is_current
+      properties:
+        id:
+          $ref: '#/components/schemas/UUIDv7'
+        created_at:
+          type: string
+          format: date-time
+        last_used_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+          description: Hard expiry of the session
+        ip_address:
+          type: string
+          description: Client IP recorded when the session was created
+          example: "203.0.113.7"
+        user_agent:
+          type: string
+          description: Client User-Agent recorded when the session was created
+        provider:
+          type: string
+          description: Identity provider used to sign in
+          example: "github"
+        is_current:
+          type: boolean
+          description: True for the session that made this request
+
+    SessionListResponse:
+      type: object
+      required:
+        - sessions
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Session'
+
+    PurgeSessionsResponse:
+      type: object
+      required:
+        - revoked_count
+      properties:
+        revoked_count:
+          type: integer
+          description: Number of sessions revoked
 
     UserInfo:
       type: object
