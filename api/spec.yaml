@@ -227,7 +227,7 @@ paths:
         1. Validates the claim token
         2. Creates the agent in the production agents table
         3. Generates an API key for the agent
-        4. Associates agent with user's tenant and chosen section
+        4. Associates agent with the claiming user's workspace (sets Agent.workspaceId)
         5. Marks claim as satisfied
         
         The agent will receive the API key on its next poll to /agent/{agentId}/claim-status.
