@@ -2495,7 +2495,7 @@ components:
         - id
         - workspaceId
         - name
-        - configVersion
+        - configVersionDesired
         - createdAt
         - updatedAt
       properties:
@@ -2510,10 +2510,18 @@ components:
           type: string
           description: Human-readable agent name
           example: "prod-server-01"
-        configVersion:
+        configVersionDesired:
           type: integer
-          description: Current configuration version
+          description: Configuration version the server wants the agent to run
           example: 3
+        configVersionCurrent:
+          type: integer
+          nullable: true
+          description: |
+            Configuration version last reported by the agent in a heartbeat, null if the agent
+            has not sent one yet. Lower than configVersionDesired means the agent has not
+            applied the latest configuration.
+          example: 2
         agentVersion:
           type: string
           nullable: true
