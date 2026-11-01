@@ -99,20 +99,20 @@ paths:
         before the agent can become operational.
         
         **Workflow:**
-        1. Agent generates its own UUIDv7 as agentId
+        1. Agent generates its own UUIDv7 as agent_id
         2. Agent generates a random claim token (e.g., "ABC123XY")
         3. Agent hashes token with SHA-256 and sends hash to server
         4. Agent shows plain token in logs for user to copy
         5. Server creates record in agent_claims table
         6. Agent starts polling /agent/{agentId}/claim-status
-        7. User claims agent via web UI using agentId + plain claimToken
+        7. User claims agent via web UI using agent_id + plain claim_token
         8. Server hashes user's input and validates against stored hash
         9. Agent receives API key on next poll
         
         **Security:** Sending the hash instead of plain token provides defense in depth,
         ensuring the claim token never travels over the network in plain text.
         
-        This endpoint is idempotent - multiple calls from the same agentId 
+        This endpoint is idempotent - multiple calls from the same agent_id 
         will update the last_seen_at timestamp.
       operationId: registerAgentSelf
       security: []  # Unauthenticated
@@ -123,11 +123,11 @@ paths:
             schema:
               $ref: '#/components/schemas/AgentSelfRegistration'
             example:
-              agentId: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
-              claimTokenHash: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+              agent_id: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
+              claim_token_hash: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
               hostname: "prod-server-01"
-              agentVersion: "1.0.0"
-              ipAddresses: 
+              agent_version: "1.0.0"
+              ip_addresses: 
               - ip: "192.168.1.1"
                 iface: "eth0"
                 family: "ipv4"
@@ -145,9 +145,9 @@ paths:
                 $ref: '#/components/schemas/AgentRegistrationResponse'
               example:
                 status: "pending_claim"
-                pollUrl: "/agent/0197f96c-b278-7f64-a32f-dae3cabe1ff0/claim-status"
-                claimUrl: "https://yoursite.com/claim"
-                expiresAt: "2026-02-01T12:00:00Z"
+                poll_url: "/agent/0197f96c-b278-7f64-a32f-dae3cabe1ff0/claim-status"
+                claim_url: "https://yoursite.com/claim"
+                expires_at: "2026-02-01T12:00:00Z"
         '200':
           description: Agent registration request updated (idempotent)
           content:
@@ -196,13 +196,13 @@ paths:
                   summary: Agent not yet claimed
                   value:
                     status: "pending_claim"
-                    expiresAt: "2026-02-01T12:00:00Z"
+                    expires_at: "2026-02-01T12:00:00Z"
                 claimed:
                   summary: Agent claimed, API key delivered
                   value:
                     status: "claimed"
-                    apiKey: "sk_live_abc123def456..."
-                    configUrl: "/agent/0197f96c-b278-7f64-a32f-dae3cabe1ff0/configuration"
+                    api_key: "sk_live_abc123def456..."
+                    config_url: "/agent/0197f96c-b278-7f64-a32f-dae3cabe1ff0/configuration"
         '404':
           description: Agent registration not found or expired
           content:
@@ -221,13 +221,13 @@ paths:
         - agent
       summary: Claim an agent (Web UI)
       description: |
-        User claims an agent by providing the agentId and claimToken found in 
+        User claims an agent by providing the agent_id and claim_token found in 
         the agent's startup logs. This endpoint:
         
         1. Validates the claim token
         2. Creates the agent in the production agents table
         3. Generates an API key for the agent
-        4. Associates agent with the claiming user's workspace (sets Agent.workspaceId)
+        4. Associates agent with the claiming user's workspace (sets Agent.workspace_id)
         5. Marks claim as satisfied
         
         The agent will receive the API key on its next poll to /agent/{agentId}/claim-status.
@@ -241,8 +241,8 @@ paths:
             schema:
               $ref: '#/components/schemas/ClaimAgentRequest'
             example:
-              agentId: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
-              claimToken: "ABC123XY"
+              agent_id: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
+              claim_token: "ABC123XY"
               name: "Production Server 01"
       responses:
         '200':
@@ -252,7 +252,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ClaimAgentResponse'
               example:
-                agentId: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
+                agent_id: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
                 status: "claimed"
                 message: "Agent will receive API key on next poll"
         '400':
@@ -2493,16 +2493,16 @@ components:
       type: object
       required:
         - id
-        - workspaceId
+        - workspace_id
         - name
-        - configVersionDesired
-        - createdAt
-        - updatedAt
+        - config_version_desired
+        - created_at
+        - updated_at
       properties:
         id:
           $ref: '#/components/schemas/UUIDv7'
           description: Unique agent identifier
-        workspaceId:
+        workspace_id:
           type: string
           description: Workspace this agent belongs to
           example: "01930000-0000-7000-0000-000000000001"
@@ -2510,46 +2510,46 @@ components:
           type: string
           description: Human-readable agent name
           example: "prod-server-01"
-        configVersionDesired:
+        config_version_desired:
           type: integer
           description: Configuration version the server wants the agent to run
           example: 3
-        configVersionCurrent:
+        config_version_current:
           type: integer
           nullable: true
           description: |
             Configuration version last reported by the agent in a heartbeat, null if the agent
-            has not sent one yet. Lower than configVersionDesired means the agent has not
+            has not sent one yet. Lower than config_version_desired means the agent has not
             applied the latest configuration.
           example: 2
-        agentVersion:
+        agent_version:
           type: string
           nullable: true
           description: Version of the agent software, null if not yet reported
           example: "1.2.0"
-        ipAddresses:
+        ip_addresses:
           type: array
           description: Network interfaces reported by the agent
           items:
             $ref: '#/components/schemas/AgentNetworkInterface'
-        lastSeenAt:
+        last_seen_at:
           type: string
           format: date-time
           nullable: true
           description: Timestamp of the last heartbeat received from the agent
           example: "2026-05-30T10:00:00Z"
-        lastResultSubmittedAt:
+        last_result_submitted_at:
           type: string
           format: date-time
           nullable: true
           description: Timestamp of the last monitoring result submission
           example: "2026-05-30T09:55:00Z"
-        createdAt:
+        created_at:
           type: string
           format: date-time
           description: Timestamp when the agent was registered
           example: "2026-01-01T00:00:00Z"
-        updatedAt:
+        updated_at:
           type: string
           format: date-time
           description: Timestamp when the agent record was last updated
@@ -2571,17 +2571,17 @@ components:
     AgentSelfRegistration:
       type: object
       required:
-        - agentId
-        - claimTokenHash
+        - agent_id
+        - claim_token_hash
         - hostname
-        - agentVersion
-        - ipAddresses
+        - agent_version
+        - ip_addresses
       properties:
-        agentId:
+        agent_id:
           $ref: '#/components/schemas/UUIDv7'
           description: Self-generated UUIDv7 identifier for this agent
           example: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
-        claimTokenHash:
+        claim_token_hash:
           type: string
           minLength: 64
           maxLength: 64
@@ -2592,11 +2592,11 @@ components:
           type: string
           description: System hostname of the machine running the agent
           example: "prod-server-01"
-        agentVersion:
+        agent_version:
           type: string
           description: Version of the agent software
           example: "1.0.0"
-        ipAddresses:
+        ip_addresses:
           type: array
           description: |
             List of all non-loopback, non-link-local network interfaces on the agent host.
@@ -2626,25 +2626,25 @@ components:
       type: object
       required:
         - status
-        - pollUrl
-        - claimUrl
-        - expiresAt
+        - poll_url
+        - claim_url
+        - expires_at
       properties:
         status:
           title: RegistrationStatus
           $ref: '#/components/schemas/RegistrationStatus'
           description: Current status of the registration
-        pollUrl:
+        poll_url:
           type: string
           format: uri-reference
           description: URL for agent to poll for claim status
           example: "/agent/0197f96c-b278-7f64-a32f-dae3cabe1ff0/claim-status"
-        claimUrl:
+        claim_url:
           type: string
           format: uri
           description: URL for user to claim the agent (web UI)
           example: "https://yoursite.com/claim"
-        expiresAt:
+        expires_at:
           type: string
           format: date-time
           description: When the claim token expires (RFC3339)
@@ -2654,19 +2654,19 @@ components:
       type: object
       required:
         - status
-        - expiresAt
-        - pollIn
+        - expires_at
+        - poll_in
       properties:
         status:
           title: ClaimStatusPendingEnum
           $ref: '#/components/schemas/ClaimStatusPendingEnum'
           description: Agent is waiting to be claimed
-        expiresAt:
+        expires_at:
           type: string
           format: date-time
           description: When the claim token expires (RFC3339)
           example: "2026-02-01T12:00:00Z"
-        pollIn:
+        poll_in:
           type: integer
           format: int32
           description: Seconds until next poll (server-controlled backoff)
@@ -2677,16 +2677,16 @@ components:
       type: object
       required:
         - status
-        - apiKey
-        - configUrl
+        - api_key
+        - config_url
       properties:
         status:
           $ref: '#/components/schemas/ClaimStatusClaimedEnum'
           description: Agent has been claimed and API key is ready
-        apiKey:
+        api_key:
           type: string
           description: API key for authenticated requests (one-time delivery)
-        configUrl:
+        config_url:
           type: string
           format: uri-reference
           description: URL to fetch agent configuration
@@ -2695,14 +2695,14 @@ components:
     ClaimAgentRequest:
       type: object
       required:
-        - agentId
-        - claimToken
+        - agent_id
+        - claim_token
       properties:
-        agentId:
+        agent_id:
           $ref: '#/components/schemas/UUIDv7'
           description: Agent ID from agent logs
           example: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
-        claimToken:
+        claim_token:
           type: string
           description: Claim token from agent logs
           example: "ABC123XY"
@@ -2714,11 +2714,11 @@ components:
     ClaimAgentResponse:
       type: object
       required:
-        - agentId
+        - agent_id
         - status
         - message
       properties:
-        agentId:
+        agent_id:
           $ref: '#/components/schemas/UUIDv7'
           description: The claimed agent's ID
           example: "0197f96c-b278-7f64-a32f-dae3cabe1ff0"
