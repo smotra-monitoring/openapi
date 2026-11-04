@@ -347,8 +347,14 @@ paths:
                 memory_total_mb: 8192.0
                 system_uptime_secs: 86400
       responses:
-        '204':
+        '200':
           description: Heartbeat received
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentHeartbeatResponse'
+        '204':
+          description: Heartbeat received (legacy response without a body)
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1901,7 +1907,7 @@ components:
           format: int64
           description: Heartbeat interval in seconds
           default: 300
-          minimum: 1
+          minimum: 60
           example: 300
         verify_tls:
           type: boolean
@@ -2349,6 +2355,19 @@ components:
         agent_status:
           $ref: '#/components/schemas/AgentStatus'
           description: Current status of the agent
+
+    AgentHeartbeatResponse:
+      type: object
+      required:
+        - config_version_desired
+      properties:
+        config_version_desired:
+          type: integer
+          format: int32
+          description: |
+            Configuration version the server wants the agent to run. When higher than the
+            agent's current version, the agent fetches GET /agent/{agentId}/configuration.
+          example: 3
 
     AgentMetrics:
       type: object
