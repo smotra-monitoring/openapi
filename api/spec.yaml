@@ -294,7 +294,10 @@ paths:
       tags:
         - agent
       summary: Get agent configuration
-      description: Retrieve current configuration for a specific agent
+      description: |
+        Retrieve the stored configuration patch for a specific agent. The server returns the
+        stored `base_config` as is, without filling defaults; the agent merges it over its own
+        defaults and local configuration (see `AgentConfigPatch.base_config`).
       operationId: getAgentConfiguration
       security:
         - AgentApiKey: []
@@ -307,7 +310,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AgentConfig'
+                $ref: '#/components/schemas/AgentConfigPatch'
         '404':
           $ref: '#/components/responses/NotFound'
         '401':
@@ -1771,8 +1774,56 @@ components:
           description: Maximum number of results the cache can hold (hard cap)
           example: 10000
 
+    AgentConfigPatch:
+      type: object
+      description: Agent record with its stored configuration patch, as returned by the server.
+      required:
+        - id
+        - workspace_id
+        - name
+        - config_version_desired
+        - base_config
+      properties:
+        id:
+          $ref: '#/components/schemas/UUIDv7'
+          description: Agent identifier; the agent maps it to `agent_id` and rejects a mismatch
+        workspace_id:
+          $ref: '#/components/schemas/UUIDv7'
+          description: Workspace this agent belongs to
+          example: "01930000-0000-7000-0000-000000000001"
+        name:
+          type: string
+          description: Human-readable agent name; the agent maps it to `agent_name`
+          example: "prod-server-01"
+        config_version_desired:
+          type: integer
+          format: int64
+          description: Configuration version the agent must run after applying `base_config`
+          example: 3
+        base_config:
+          type: object
+          additionalProperties: true
+          description: |
+            JSON Merge Patch (RFC 7396) over the `AgentConfig` structure, stored and returned
+            unprocessed (a partial object, not a full `AgentConfig`).
+            The agent builds its configuration as: built-in defaults, then local overrides,
+            then this patch.
+            - Objects merge key by key; scalars and arrays (`tags`, `endpoints`) replace the whole value.
+            - `null` removes the key from the local overrides, so the agent default applies again.
+            - A key absent from the patch leaves the agent's current value unchanged.
+            - Must not contain `agent_id`, `agent_name`, `version`, `server.api_key`, `storage.cache_dir`.
+            - Unknown keys or values of the wrong type make the agent reject the whole patch.
+          example:
+            monitoring:
+              interval_secs: 30
+            storage:
+              max_cached_results: null
+
     AgentConfig:
       type: object
+      description: |
+        Effective agent configuration after merging defaults, local overrides and the server
+        patch. Never sent by the server; the server returns `AgentConfigPatch`.
       required:
         - version
         - agent_id
