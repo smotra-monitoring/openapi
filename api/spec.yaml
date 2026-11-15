@@ -1709,6 +1709,7 @@ components:
           example: "0.0.1"
         config_version:
           type: integer
+          format: int64
           description: Version of the agent configuration
           example: 23
         is_running:
@@ -1783,6 +1784,8 @@ components:
         - name
         - config_version_desired
         - base_config
+        - tags
+        - endpoints
       properties:
         id:
           $ref: '#/components/schemas/UUIDv7'
@@ -1808,16 +1811,29 @@ components:
             unprocessed (a partial object, not a full `AgentConfig`).
             The agent builds its configuration as: built-in defaults, then local overrides,
             then this patch.
-            - Objects merge key by key; scalars and arrays (`tags`, `endpoints`) replace the whole value.
+            - Objects merge key by key; scalars and arrays replace the whole value.
             - `null` removes the key from the local overrides, so the agent default applies again.
             - A key absent from the patch leaves the agent's current value unchanged.
             - Must not contain `agent_id`, `agent_name`, `version`, `server.api_key`, `storage.cache_dir`.
+            - Must not contain `tags` or `endpoints`; the server resolves them and returns them
+              only as the top-level `tags` and `endpoints` fields.
             - Unknown keys or values of the wrong type make the agent reject the whole patch.
           example:
             monitoring:
               interval_secs: 30
             storage:
               max_cached_results: null
+        tags:
+          type: array
+          items:
+            type: string
+          description: Agent tags resolved by the server; they replace the agent's tags wholesale
+          example: ["production", "web-server"]
+        endpoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/Endpoint'
+          description: Endpoints the agent must monitor, resolved by the server via topology membership
 
     AgentConfig:
       type: object
@@ -1837,7 +1853,7 @@ components:
       properties:
         version:
           type: integer
-          format: int32
+          format: int64
           description: Configuration version (used for syncing with server)
           example: 1
         agent_id:
@@ -2414,7 +2430,7 @@ components:
       properties:
         config_version_desired:
           type: integer
-          format: int32
+          format: int64
           description: |
             Configuration version the server wants the agent to run. When higher than the
             agent's current version, the agent fetches GET /agent/{agentId}/configuration.
@@ -2587,10 +2603,12 @@ components:
           example: "prod-server-01"
         config_version_desired:
           type: integer
+          format: int64
           description: Configuration version the server wants the agent to run
           example: 3
         config_version_current:
           type: integer
+          format: int64
           nullable: true
           description: |
             Configuration version last reported by the agent in a heartbeat, null if the agent
