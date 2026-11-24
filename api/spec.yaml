@@ -448,6 +448,38 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  /agents/{agentId}:
+    get:
+      tags:
+        - agent
+      summary: Get agent details
+      description: |
+        Returns all non-sensitive fields for a single agent belonging to the
+        authenticated user's workspace.
+
+        **Permissions:** Requires a valid OAuth2 session. Agent API keys are not accepted.
+      operationId: getAgent
+      security:
+        - OAuth2AuthorizationCode: [agents:read]
+        - OAuth2ClientCredentials: [agents:read]
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+      responses:
+        '200':
+          description: Agent retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   # ============================================
   # RESULT ENDPOINTS
   # ============================================
